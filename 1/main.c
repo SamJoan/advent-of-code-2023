@@ -8,10 +8,9 @@
 #include <string.h>
 
 char *replace_str(char *input_str) {
-    char originals[][10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eigth", "nine"};
-    char replacements[][10] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+    char originals[][10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+    char replacements[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-    char *tmp = strdup(input_str);
     char *pos = NULL;
     int relative_pos = -1;
 
@@ -20,30 +19,42 @@ char *replace_str(char *input_str) {
 
     int min_pos_rep_index = -1;
     int max_pos_rep_index = -1;
+    char *tmp = strdup(input_str);
     for(int i = 0; i < 10; i++) {
         char *orig = originals[i];
         pos = strstr(input_str, orig);
 
         if(pos != NULL) {
             relative_pos = pos - input_str;
+            
+            tmp[relative_pos] = replacements[i];
+
             if(min_pos == -1 || relative_pos < min_pos) {
                 min_pos = relative_pos;
                 min_pos_rep_index = i;
             }
 
-            if(relative_pos > max_pos) {
-                max_pos = relative_pos;
-                max_pos_rep_index = i;
-            }
+            while(pos != NULL) {
+                printf("%s\n", pos);
+                relative_pos = pos - input_str;
+                tmp[relative_pos] = replacements[i];
 
-            /*printf("%s\n", pos);*/
-            /*printf("%d\n", relative_pos);*/
+                char *next_pos = strstr(pos + 1, orig);
+                int is_last = next_pos == NULL;
+
+                if(is_last && relative_pos > max_pos) {
+                    max_pos = relative_pos;
+                    max_pos_rep_index = i;
+                }
+
+                pos = next_pos;
+            }
         }
     }
 
-    printf("max pos %s\n", originals[max_pos_rep_index]);
-    printf("min pos %s\n", originals[min_pos_rep_index]);
-
+    if(max_pos_rep_index == -1 || min_pos_rep_index == -1) {
+        return tmp;
+    }
 
     return tmp;
 }
@@ -123,7 +134,7 @@ int main(int argc, char *argv[]) {
 	if (line)
 	    free(line);
 
-        printf("%ld\n", result);
+        printf("Final result: %ld\n", result);
 
 	exit(EXIT_SUCCESS);
     } else {

@@ -12,13 +12,16 @@ MU_TEST(test_get_calibration_value) {
 }
 
 MU_TEST(test_get_calibration_value_silly) {
-    mu_check(get_calibration_value("two1nine") == 29);
-    mu_check(get_calibration_value("eightwothree") == 83);
-    mu_check(get_calibration_value("abcone2threexyz") == 13);
-    mu_check(get_calibration_value("xtwone3four") == 24);
-    mu_check(get_calibration_value("4nineeightseven2") == 42);
-    mu_check(get_calibration_value("zoneight234") == 14);
-    mu_check(get_calibration_value("7pqrstsixteen") == 76);
+    /*mu_check(get_calibration_value("two1nine") == 29);*/
+    /*mu_check(get_calibration_value("eightwothree") == 83);*/
+    /*mu_check(get_calibration_value("abcone2threexyz") == 13);*/
+    /*mu_check(get_calibration_value("xtwone3four") == 24);*/
+    /*mu_check(get_calibration_value("4nineeightseven2") == 42);*/
+    /*mu_check(get_calibration_value("zoneight234") == 14);*/
+    /*mu_check(get_calibration_value("7pqrstsixteen") == 76);*/
+    /*mu_check(get_calibration_value("hfbnlvhd76kmxf414pm") == 74);*/
+
+    mu_check(get_calibration_value("7pqrstsixteen9six") == 76);
 }
 
 MU_TEST(test_sum_allocation_values) {
@@ -26,10 +29,16 @@ MU_TEST(test_sum_allocation_values) {
     mu_check(sum_calibration_values(lines) == 142);
 }
 
+MU_TEST(test_sum_allocation_values_silly) {
+    char *lines = "two1nine\neightwothree\nabcone2threexyz\nxtwone3four\n4nineeightseven2\nzoneight234\n7pqrstsixteen";
+    mu_check(sum_calibration_values(lines) == 281);
+}
+
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_get_calibration_value);*/
+    MU_RUN_TEST(test_get_calibration_value);
     MU_RUN_TEST(test_get_calibration_value_silly);
-    /*MU_RUN_TEST(test_sum_allocation_values);*/
+    MU_RUN_TEST(test_sum_allocation_values);
+    MU_RUN_TEST(test_sum_allocation_values_silly);
 }
 
 int run_tests() {
