@@ -7,7 +7,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-long int get_calibration_value(char *str) {
+char *replace_str(char *input_str) {
+    char originals[][10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eigth", "nine"};
+    char replacements[][10] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+
+    char *tmp = strdup(input_str);
+    char *pos = NULL;
+    int relative_pos = -1;
+
+    int min_pos = -1;
+    int max_pos = -1;
+
+    int min_pos_rep_index = -1;
+    int max_pos_rep_index = -1;
+    for(int i = 0; i < 10; i++) {
+        char *orig = originals[i];
+        pos = strstr(input_str, orig);
+
+        if(pos != NULL) {
+            relative_pos = pos - input_str;
+            if(min_pos == -1 || relative_pos < min_pos) {
+                min_pos = relative_pos;
+                min_pos_rep_index = i;
+            }
+
+            if(relative_pos > max_pos) {
+                max_pos = relative_pos;
+                max_pos_rep_index = i;
+            }
+
+            /*printf("%s\n", pos);*/
+            /*printf("%d\n", relative_pos);*/
+        }
+    }
+
+    printf("max pos %s\n", originals[max_pos_rep_index]);
+    printf("min pos %s\n", originals[min_pos_rep_index]);
+
+
+    return tmp;
+}
+
+long int get_calibration_value(char *input_str) {
+    char *str = replace_str(input_str);
+
     int first_number = -1;
     int last_number = -1;
 
@@ -31,6 +74,8 @@ long int get_calibration_value(char *str) {
 
     long int result_int = -1;
     result_int = strtol(result_str, NULL, 10);
+
+    free(str);
 
     return result_int;
 
@@ -59,7 +104,28 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+        long int result = 0;
 
+	fp = fopen("input.txt", "r");
+	if (fp == NULL)
+	    exit(EXIT_FAILURE);
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+            long int calibration_value = get_calibration_value(line);
+            result += calibration_value;
+	}
+
+	fclose(fp);
+	if (line)
+	    free(line);
+
+        printf("%ld\n", result);
+
+	exit(EXIT_SUCCESS);
     } else {
         run_tests();
     }

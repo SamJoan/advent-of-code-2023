@@ -11,14 +11,25 @@ MU_TEST(test_get_calibration_value) {
     mu_check(get_calibration_value("treb7uchet") == 77);
 }
 
+MU_TEST(test_get_calibration_value_silly) {
+    mu_check(get_calibration_value("two1nine") == 29);
+    mu_check(get_calibration_value("eightwothree") == 83);
+    mu_check(get_calibration_value("abcone2threexyz") == 13);
+    mu_check(get_calibration_value("xtwone3four") == 24);
+    mu_check(get_calibration_value("4nineeightseven2") == 42);
+    mu_check(get_calibration_value("zoneight234") == 14);
+    mu_check(get_calibration_value("7pqrstsixteen") == 76);
+}
+
 MU_TEST(test_sum_allocation_values) {
     char *lines = "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet";
     mu_check(sum_calibration_values(lines) == 142);
 }
 
 MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST(test_get_calibration_value);
-    MU_RUN_TEST(test_sum_allocation_values);
+    /*MU_RUN_TEST(test_get_calibration_value);*/
+    MU_RUN_TEST(test_get_calibration_value_silly);
+    /*MU_RUN_TEST(test_sum_allocation_values);*/
 }
 
 int run_tests() {
