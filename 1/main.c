@@ -13,13 +13,8 @@ char *replace_str(char *input_str) {
 
     char *pos = NULL;
     int relative_pos = -1;
-
-    int min_pos = -1;
-    int max_pos = -1;
-
-    int min_pos_rep_index = -1;
-    int max_pos_rep_index = -1;
     char *tmp = strdup(input_str);
+
     for(int i = 0; i < 10; i++) {
         char *orig = originals[i];
         pos = strstr(input_str, orig);
@@ -29,30 +24,13 @@ char *replace_str(char *input_str) {
             
             tmp[relative_pos] = replacements[i];
 
-            if(min_pos == -1 || relative_pos < min_pos) {
-                min_pos = relative_pos;
-                min_pos_rep_index = i;
-            }
-
             while(pos != NULL) {
                 relative_pos = pos - input_str;
                 tmp[relative_pos] = replacements[i];
 
-                char *next_pos = strstr(pos + 1, orig);
-                int is_last = next_pos == NULL;
-
-                if(is_last && relative_pos > max_pos) {
-                    max_pos = relative_pos;
-                    max_pos_rep_index = i;
-                }
-
-                pos = next_pos;
+                pos = strstr(pos + 1, orig);
             }
         }
-    }
-
-    if(max_pos_rep_index == -1 || min_pos_rep_index == -1) {
-        return tmp;
     }
 
     return tmp;
