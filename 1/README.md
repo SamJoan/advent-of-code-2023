@@ -1,5 +1,5 @@
 # README
 
 ```
-clang -g word_sort_tests.c word_sort.c -o word_sort && valgrind -q --leak-check=yes ./word_sort test a
+clang -g  main_test.c main.c -o main && valgrind -q --leak-check=yes ./main exec
 ```

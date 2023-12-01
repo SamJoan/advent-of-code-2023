@@ -35,7 +35,6 @@ char *replace_str(char *input_str) {
             }
 
             while(pos != NULL) {
-                printf("%s\n", pos);
                 relative_pos = pos - input_str;
                 tmp[relative_pos] = replacements[i];
 
