@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *replace_str(char *input_str) {
+char *insert_digits(char *input_str) {
     char originals[][10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
     char replacements[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
@@ -37,7 +37,7 @@ char *replace_str(char *input_str) {
 }
 
 long int get_calibration_value(char *input_str) {
-    char *str = replace_str(input_str);
+    char *str = insert_digits(input_str);
 
     int first_number = -1;
     int last_number = -1;
