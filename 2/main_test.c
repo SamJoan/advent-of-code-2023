@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include "minunit.h"
-#include "word_sort.h"
+#include "main.h"
 
-MU_TEST(test_whatever) {
-    mu_check(1);
+MU_TEST(test_parse_game) {
+    /*mu_check(get_calibration_value("1abc2") == 12);*/
 }
 
 MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST(test_whatever);
+    MU_RUN_TEST(test_parse_game);
 }
 
 int run_tests() {
