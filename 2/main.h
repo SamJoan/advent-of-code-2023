@@ -9,6 +9,12 @@ struct GameSet {
 struct Game {
     int id;
     int possible;
+
+    long int power;
+
+    int minimum_red;
+    int minimum_green;
+    int minimum_blue;
 };
 
 struct Game *parse_game(char *game_str);

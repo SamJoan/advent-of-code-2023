@@ -58,6 +58,24 @@ bool game_set_possible(struct GameSet *game_set) {
     }
 }
 
+void calculate_minimum(struct Game *game, struct GameSet *game_set) {
+    if(game_set->red > game->minimum_red) {
+        game->minimum_red = game_set->red;
+    }
+
+    if(game_set->green > game->minimum_green) {
+        game->minimum_green = game_set->green;
+    }
+
+    if(game_set->blue > game->minimum_blue) {
+        game->minimum_blue = game_set->blue;
+    }
+}
+
+void calculate_power(struct Game *game) {
+    game->power = game->minimum_red * game->minimum_green * game->minimum_blue;
+}
+
 struct Game *parse_game(char *game_str_in) {
     char *game_str = strdup(game_str_in);
     char *saveptr;
@@ -68,17 +86,24 @@ struct Game *parse_game(char *game_str_in) {
     parse_game_id(game, game_id_str);
 
     struct GameSet *game_set = malloc(sizeof(struct GameSet));
+    game->minimum_red = 0;
+    game->minimum_green = 0;
+    game->minimum_blue = 0;
+
     game->possible = true;
     char *next_set = strtok_r(NULL, ";", &saveptr);
     while(next_set != NULL) {
         parse_game_set(game_set, next_set);
         if(!game_set_possible(game_set)) {
             game->possible = false;
-            break;
         }
+
+        calculate_minimum(game, game_set);
 
         next_set = strtok_r(NULL, ";", &saveptr);
     }
+
+    calculate_power(game);
 
     free(game_str);
     free(game_set);
@@ -103,11 +128,14 @@ int main(int argc, char *argv[]) {
 	    exit(EXIT_FAILURE);
 
         int total = 0;
+        long int total_power = 0;
 	while ((read = getline(&line, &len, fp)) != -1) {
             struct Game *game = parse_game(line);
             if(game->possible == true) {
                 total += game->id;
             }
+
+            total_power += game->power;
             free(game);
 	}
 
@@ -115,7 +143,7 @@ int main(int argc, char *argv[]) {
 	if (line)
 	    free(line);
 
-        printf("Final result: %d\n", total);
+        printf("Final result: total: %d total_power: %ld\n", total,  total_power);
 
 	exit(EXIT_SUCCESS);
     } else {
