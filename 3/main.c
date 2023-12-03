@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
             long int part_numbers = find_part_numbers(prev_line, cur_line, next_line);
             total += part_numbers;
 
-            printf("%s%s%s -> %ld\n\n", prev_line, cur_line, next_line, part_numbers);
+            printf("%s%s %s -> %ld\n\n", prev_line, cur_line, next_line, part_numbers);
         }
 
 	fclose(fp);

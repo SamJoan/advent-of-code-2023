@@ -36,6 +36,12 @@ MU_TEST(test_find_part_numbers) {
 
     total = find_part_numbers("...$.*....", ".664.598..", NULL);
     mu_check(total == 1262);
+
+    total = find_part_numbers(
+            "617*.@....@", 
+            ".....@.58.@", 
+            "..592@....@");
+    mu_check(total == 0);
 }
 
 MU_TEST_SUITE(test_suite) {
