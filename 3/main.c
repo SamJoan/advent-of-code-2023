@@ -12,7 +12,7 @@ void p(char *str) {
 }
 
 bool is_symbol(char c) {
-    return !isdigit(c) && c != '.';
+    return !isdigit(c) && c != '.' && c != '\n' && c != '\r';
 }
 
 bool validate_part_number(char *prev_line, char *cur_line, char *next_line, int start, int end) {
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
         long int result = 0;
 
         fp = fopen("input.txt", "r");
-        /*fp = fopen("input_test.txt", "r")*/
+        /*fp = fopen("input_test.txt", "r");*/
 	if (fp == NULL)
 	    exit(EXIT_FAILURE);
 
@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
             total += part_numbers;
 
             printf("%s%s %s -> %ld\n\n", prev_line, cur_line, next_line, part_numbers);
+            /*printf("%ld\n", total);*/
         }
 
 	fclose(fp);

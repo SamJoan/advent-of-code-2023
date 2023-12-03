@@ -42,6 +42,30 @@ MU_TEST(test_find_part_numbers) {
             ".....@.58.@", 
             "..592@....@");
     mu_check(total == 0);
+
+    total = find_part_numbers(
+            "617*.@...", 
+            ".....@.58", 
+            "..592@...");
+    mu_check(total == 0);
+
+    total = find_part_numbers(
+            "123123.58", 
+            "617..@...", 
+            "123123@hh");
+    mu_check(total == 0);
+
+    total = find_part_numbers(
+            NULL, 
+            "11.$.", 
+            NULL);
+    mu_check(total == 0);
+
+    total = find_part_numbers(
+            NULL, 
+            "100\n", 
+            "200\n");
+    mu_check(total == 0);
 }
 
 MU_TEST_SUITE(test_suite) {
