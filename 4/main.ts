@@ -3,20 +3,24 @@ import { promises as fs } from "fs"
 class Card {
     winningNumbers: Object = {};
     numbers: Array<string> = [];
-    score: number = 0;
+    numbersWon: number = 0; 
+    nbCopies: number = 1;
+    id: number;
 }
 
-let cards:Array<Card> = [];
 
 async function main() {
+    let cards:Array<Card> = [];
     //let data = await fs.readFile('input_test.txt');
     let data = await fs.readFile('input.txt');
     let lines = data.toString().split(/(?:\r\n|\r|\n)/g);   
-    let total = 0;
+    let nb = 0;
     for(let line of lines) {
         if(line == '') break;
+        nb++;
 
         let card = new Card();
+        card.id = nb;
 
         let splat = line.split(':');
         let cardStr = splat[0];
@@ -37,18 +41,34 @@ async function main() {
             if(number == '') continue;
             card.numbers.push(number);
             if(number in card.winningNumbers) {
-                if(card.score == 0) {
-                    card.score = 1;
-                } else {
-                    card.score = card.score * 2;
-                }
+                card.numbersWon += 1;
             }
         }
 
-        total += card.score;
-
-        console.log(`card.score ${card.score}, total ${total}`);
+        cards.push(card);
     }
+
+
+    let totalCopies = 0;
+    for(let i in cards) {
+        let card = cards[i];
+        console.log(`Processing card ${card.id} (won ${card.numbersWon})`);
+        totalCopies += card.nbCopies;
+
+        if(card.numbersWon > 0) {
+            for(let x = 0; x < card.nbCopies; x++) {
+                for(let j = 1; j <= card.numbersWon; j++) {
+                    let index = parseInt(i) + j;
+                    if(index in cards) {
+                        let copyCard = cards[index]
+                        copyCard.nbCopies += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    console.log(totalCopies);
 }
 
 main();
