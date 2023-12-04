@@ -76,6 +76,111 @@ long int find_part_numbers(char *prev_line, char *cur_line_in, char *next_line) 
     return result;
 }
 
+struct Number *get_number(char *line, int pos) {
+    int start_pos = -1;
+    int end_pos = -1;
+
+    for(int i = pos; i >= 0; i--) {
+        if(!isdigit(line[i])) {
+            start_pos = i + 1;
+            break;
+        } else if(i == 0) {
+            start_pos = 0;
+        }
+    }
+
+    for(int i = pos; i < strlen(line); i++) {
+        if(!isdigit(line[i])) {
+            end_pos = i - 1;
+            break;
+        } else if(i == strlen(line) - 1) {
+            end_pos = i;
+        }
+    }
+
+    char *nb_str = malloc(end_pos - start_pos + 2);
+    int index = 0;
+    for(int i = start_pos; i <= end_pos; i++) {
+        nb_str[index] = line[i];
+        index++;
+    }
+    nb_str[index] = '\0';
+
+    struct Number *nb = malloc(sizeof(struct Number));
+    nb->start_pos = start_pos;
+    nb->end_pos = end_pos;
+    sscanf(nb_str, "%ld", &nb->number_value);
+    free(nb_str);
+    
+    return nb;
+}
+
+long int calculate_gear_ratio(char *prev_line, char *cur_line, char *next_line, int index) {
+    int start_index = index == 0 ? 0 : index - 1;
+    int end_index = index + 1 == strlen(cur_line) ? index : index + 1;
+
+    int max_number = 10;
+    struct Number *number[max_number];
+    for(int i = 0; i < max_number; i++) {
+        number[i] = NULL;
+    }
+
+    int found = 0;
+    for(int i = start_index; i <= end_index; i++) {
+        char prev_c = prev_line[i];
+        if(isdigit(prev_c)) {
+            number[found] = get_number(prev_line, i);
+            i = number[found]->end_pos;
+            found++;
+        }
+    }
+
+    for(int i = start_index; i <= end_index; i++) {
+        char next_c = next_line[i];
+        if(isdigit(next_c)) {
+            number[found] = get_number(next_line, i);
+            i = number[found]->end_pos;
+            found++;
+        }
+    }
+
+    if(index != 0 && isdigit(cur_line[index - 1])) {
+        number[found] = get_number(cur_line, index - 1);
+        found++;
+    }
+
+    if(index + 1 != strlen(cur_line) && isdigit(cur_line[index + 1])) {
+        number[found] = get_number(cur_line, index + 1);
+        found++;
+    }
+
+    long int result = 0;
+    if(found == 2) {
+         result = number[0]->number_value * number[1]->number_value;
+    }
+
+    for(int i = 0; i < max_number; i++) {
+        free(number[i]);
+    }
+
+    return result;
+}
+
+long int find_gears(char *prev_line, char *cur_line_in, char *next_line) {
+    long int gear_ratio = 0;
+    for(int i = 0; i < strlen(cur_line_in); i++) {
+        char c = cur_line_in[i];
+        if(c == '*') {
+            long int ratio = calculate_gear_ratio(prev_line, cur_line_in,
+                    next_line, i);
+
+            gear_ratio += ratio;
+        }
+    }
+
+    return gear_ratio;
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
@@ -106,6 +211,7 @@ int main(int argc, char *argv[]) {
         int nb_elems = nb - 1;
 
         long int total = 0;
+        long int total_gear_ratio = 0;
         for(int i = 0; i <= nb_elems; i++) {
             int prev_elem = i == 0 ? -1 : i - 1;
             int next_elem = i + 1 > nb_elems ? - 1 : i + 1;
@@ -115,9 +221,11 @@ int main(int argc, char *argv[]) {
             char *next_line = i == nb_elems ? NULL : lines[i + 1];
             
             long int part_numbers = find_part_numbers(prev_line, cur_line, next_line);
+            long int gear_ratio = find_gears(prev_line, cur_line, next_line);
             total += part_numbers;
+            total_gear_ratio += gear_ratio;
 
-            printf("%s%s %s -> %ld\n\n", prev_line, cur_line, next_line, part_numbers);
+            /*printf("%s%s %s -> %ld\n\n", prev_line, cur_line, next_line, part_numbers);*/
             /*printf("%ld\n", total);*/
         }
 
@@ -125,7 +233,7 @@ int main(int argc, char *argv[]) {
 	if (line)
 	    free(line);
 
-        printf("Final result: %ld\n", total);
+        printf("Final result: %ld, gear_ratio: %ld\n", total, total_gear_ratio);
 
 	exit(EXIT_SUCCESS);
     } else {
