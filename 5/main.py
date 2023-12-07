@@ -1,3 +1,4 @@
+from multiprocessing import Pool
 import sys
 
 class Map:
@@ -28,24 +29,10 @@ class TranslationRule:
             position = seed - min_src
             return self.dst_start + position
 
-class SeedGenerator:
-    pos = 0
-
+class SeedInterval:
     def __init__(self, start, range):
         self.start = start
-        self.range = range
-
-    def __iter__(self):
-        self.pos = 0
-        return self
-
-    def __next__(self):
-        if self.pos < self.range:
-            ret = self.start + self.pos
-            self.pos += 1
-            return ret
-        else:
-            raise StopIteration
+        self.end = start + range
 
 def parse_maps(file):
     fh = open(file)
@@ -65,7 +52,7 @@ def parse_maps(file):
             for nb, start in enumerate(split_splat_splot):
                 if nb % 2 == 0:
                     range = split_splat_splot[nb + 1]
-                    seeds.append(SeedGenerator(int(start), int(range)))
+                    seeds.append(SeedInterval(int(start), int(range)))
 
         elif not parsing_map:
             if line == '':
@@ -97,18 +84,31 @@ def map(maps, seed):
 
     return input
 
-# seed_generators, maps = parse_maps("input_test.txt")
-seed_generators, maps = parse_maps("input.txt")
-
-lowest_number = 9223372036854775807
-nb = 0
-for seed_generator in seed_generators:
-    for seed in seed_generator:
+def try_all_combinations_like_a_dummy(seed_generator):
+    lowest_number = 9223372036854775807
+    nb = 0
+    for seed in range(seed_generator.start, seed_generator.end):
+        if nb % 1000000 == 0 and nb != 0:
+            print("Tried %skk, lowest_number %s" % (nb/1000000, lowest_number))
 
         output = map(maps, seed)
         if output < lowest_number:
             lowest_number = output
 
         nb += 1
+
+    return lowest_number
+
+
+# seed_generators, maps = parse_maps("input_test.txt")
+seed_generators, maps = parse_maps("input.txt")
+
+lowest_number = 9223372036854775807
+pool = Pool(8)
+results = pool.map(try_all_combinations_like_a_dummy, list(seed_generators))
+
+for output in results:
+    if output < lowest_number:
+        lowest_number = output
 
 print(lowest_number)
