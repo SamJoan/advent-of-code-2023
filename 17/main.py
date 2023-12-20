@@ -1,18 +1,9 @@
 import sys
 import copy
-import functools
+from queue import PriorityQueue
 
-UP = 'UP' 
-DOWN = 'DOWN'
-LEFT = 'LEFT'
-RIGHT = 'RIGHT'
-
-DIR_CHANGE = {
-    RIGHT: [RIGHT, DOWN, UP],
-    DOWN: [DOWN, RIGHT, LEFT],
-    UP: [RIGHT, LEFT, UP],
-    LEFT: [DOWN, UP, LEFT],
-}
+HORIZ = 'HORIZ'
+VERT = 'VERT'
 
 def convert(l):
     return tuple(convert(x) for x in l) if type(l) is list else l
@@ -68,60 +59,55 @@ def pv(map, visited):
         print(res)
 
 
-def nav(map, x, y, conseq, cur_dir, visited=None):
-    if conseq >= 3:
-        raise CantNavigate()
+# My original solution was too inefficient to finish because I was not using a priority queue. :(
+# Inspiration from https://cutonbuminband.github.io/AOC/qmd/2023.html#day-17-clumsy-crucible
+def nav(map, minval=1, maxval=3):
+    q = PriorityQueue()
+    q.put((0, (0, 0, HORIZ)))
+    q.put((0, (0, 0, VERT)))
+    seen = set()
+    max_x = len(map[0]) - 1
+    max_y = len(map) - 1
+    
+    while q:
+        cost, vec = q.get()
+        x, y, dir = vec
 
-    if conseq == -1:
-        conseq = 0
-        cur_heat_loss = 0
-    else:
-        if x == -1 or y == -1:
-            raise CantNavigate()
+        if x == max_x and y == max_y:
+            break
 
-        try:
-            cur_heat_loss = map[y][x]
-        except IndexError:
-            raise CantNavigate()
-
-    if visited == None:
-        visited = set()
-    else:
-        # visited = copy.copy(visited)
-        loc_tuple = (x, y, conseq, cur_dir)
-        if not loc_tuple in visited:
-            visited.add(loc_tuple)
-        else:
-            raise CantNavigate()
-
-    # pv(map, visited)
-    # raw_input()
-
-    # print(x, y, conseq, cur_dir)
-    # raw_input()
-    target_x = len(map) - 1
-    target_y = len(map[0]) - 1
-
-    if x == len(map) -1 and y == len(map[0]) -1:
-        return cur_heat_loss
-    else:
-        min_heat_loss = -1
-        for dir in DIR_CHANGE[cur_dir]:
-            next_x, next_y = get_next_pos(x, y, dir)
-            next_conseq = 0 if dir != cur_dir else conseq + 1
-            try:
-                heat_loss = nav(map, next_x, next_y, next_conseq, dir, set(visited))
-                if min_heat_loss != -1:
-                    min_heat_loss = heat_loss if heat_loss < min_heat_loss else min_heat_loss
-                else:
-                    min_heat_loss = heat_loss
-            except CantNavigate:
-                continue
+        if (x, y, dir) in seen:
+            continue
+        seen.add((x, y, dir))
         
-        return min_heat_loss + cur_heat_loss
+        original_cost = cost
+        for s in [1, -1]:
+            cost = original_cost
+            new_x, new_y = x, y
+            for i in range(1, maxval + 1):
+                if dir == HORIZ:
+                    new_x = x + i * s
+                if dir == VERT:
+                    new_y = y + i * s
 
-sys.setrecursionlimit(10000)
-map = parse_map("input_test.txt")
+                if new_x < 0 or new_x > max_x or new_y < 0 or new_y > max_y:
+                    break
 
-min = nav(map, 0, 0, -1, RIGHT)
+                cost += map[new_y][new_x]
+                new_dir = HORIZ if dir == VERT else VERT
+
+                new_vec = (new_x, new_y, new_dir) 
+                if new_vec in seen:
+                    continue
+
+                if i >= minval:
+                    q.put((cost, new_vec))
+
+    return cost
+
+# map = parse_map("input_test.txt")
+map = parse_map("input.txt")
+
+# min = nav(map)
+min = nav(map, minval=4, maxval=10)
 print(min)
