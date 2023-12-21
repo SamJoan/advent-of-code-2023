@@ -9,7 +9,12 @@ def get_positions(filename):
     for line in fh:
         line = line.strip()
         dir, distance, colour = line.split(' ')
-        distance = int(distance)
+
+        colour_raw = colour[2:-1]
+        dir_map = ["R", "D", "L", "U"]
+        dir = dir_map[int(colour_raw[-1])]
+        distance = int(colour_raw[:-1], 16)
+
         if dir == 'U':
             y -= distance
         elif dir == 'D':
@@ -67,14 +72,6 @@ def pm(positions):
         
 # positions = get_positions("input_test.txt")
 positions = get_positions("input.txt")
-# positions = [
-    # (1, 6),
-    # (3, 1),
-    # (7, 2),
-    # (4, 4),
-    # (8, 5)
-# ]
-# pm(positions)
 area = get_area(positions) # shoelace
 perimeter = get_perimeter(positions) # chaos
 #picks theorem
