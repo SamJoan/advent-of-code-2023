@@ -67,11 +67,11 @@ def take_step(map, cur_pos, remaining_steps, visited):
 
     return total_positions
 
-map, start_pos = parse_map("input_test.txt")
-# map, start_pos = parse_map("input.txt")
+# map, start_pos = parse_map("input_test.txt")
+map, start_pos = parse_map("input.txt")
 
 last_result = 0
-for nb in range(6, 500):
+for nb in range(6, 5000):
     positions = take_step(map, start_pos, nb, None)
     print(nb, positions, positions - last_result)
     last_result = positions
