@@ -67,13 +67,17 @@ def take_step(map, cur_pos, remaining_steps, visited):
 
     return total_positions
 
+def find_steps(n):
+    # I got the numbers for 65 (how long it takes to reach the end of the first square from (5,5)) and 131 which is how long it takes to traverse the next set of maps, and then pasted those numbers into wolfram https://www.wolframalpha.com/input?i=%7B3882%2C+34441%2C+95442%2C+186885...%7D
+    # Through what I assume is magic, it produced this formula
+    # :confused:
+
+    a = 3882 + 15338 * n + 15221 * (n*n)
+    return a
+
 # map, start_pos = parse_map("input_test.txt")
-map, start_pos = parse_map("input.txt")
+# map, start_pos = parse_map("input_test_rude.txt")
+# map, start_pos = parse_map("input.txt")
 
-last_result = 0
-for nb in range(6, 5000):
-    positions = take_step(map, start_pos, nb, None)
-    print(nb, positions, positions - last_result)
-    last_result = positions
-
-print(positions)
+desired_n = (26501365 - 65) / 131
+print(find_steps(desired_n))
