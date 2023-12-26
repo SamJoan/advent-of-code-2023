@@ -1,6 +1,7 @@
 import sys
 from pprint import pprint
 import uuid
+from Queue import PriorityQueue, Empty
 
 X = 'X'
 Y = 'Y'
@@ -26,6 +27,9 @@ class Block():
             return Z
         else:
             return None
+
+    def __repr__(self):
+        return "<Block #" + str(self.id) + ">"
 
     def holding_me(self, new_space):
         s, e = self.start, self.end
@@ -209,12 +213,46 @@ def apply_gravity(space):
 
     return new_space, new_blocks
 
+def calculate_chain_reaction(new_space, block, already_counted):
+    q = PriorityQueue()
+    q.put((block.start[2], block, True))
+
+    falling_nb = 0
+    while q:
+        try:
+            z, block, initial = q.get(block=False)
+        except Empty:
+            break
+
+        if block in already_counted:
+            continue
+
+        if not initial:
+            holding_me = block.holding_me(new_space)
+            all_falling = True
+            for holder in holding_me:
+                if holder not in already_counted:
+                    all_falling = False
+
+            if not all_falling:
+                continue
+            else:
+                falling_nb += 1
+
+        already_counted.add(block)
+
+        potentially_falling = block.holding(new_space)
+        print(block.id, len(potentially_falling), "current z", z)
+        for pf in potentially_falling:
+            q.put((pf.start[2], pf, False))
+
+    return falling_nb
+
 def count_disintegrable(new_space, blocks):
-    disintegrable = 0
+    chain_reaction = 0
     for block in blocks:
         holding = block.holding(new_space)
         if len(holding) == 0:
-            disintegrable += 1
             continue
 
         all_held_by_another = True
@@ -222,12 +260,13 @@ def count_disintegrable(new_space, blocks):
             if len(block_above.holding_me(new_space)) == 1:
                 all_held_by_another = False
 
-        if all_held_by_another:
-            disintegrable += 1
+        if not all_held_by_another:
+            already_counted = set()
+            res = calculate_chain_reaction(new_space, block, already_counted)
+            print(res)
+            chain_reaction += res
 
-        print(disintegrable, block.id, len(holding), all_held_by_another)
-
-    return disintegrable
+    return chain_reaction
         
 # blocks = parse_blocks("input_test.txt")
 blocks = parse_blocks("input.txt")
@@ -235,7 +274,7 @@ space = create_3d_space(blocks)
 space = populate(space, blocks)
 
 space, blocks = apply_gravity(space)
-nb = count_disintegrable(space, blocks)
-print(nb)
+nondis = count_disintegrable(space, blocks)
+print(nondis)
 
 
