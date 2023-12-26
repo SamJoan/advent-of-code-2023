@@ -92,11 +92,7 @@ def take_a_hike(map, start, end):
         if pos == end:
             paths.append(steps)
 
-        c = map[y][x]
-        if c in SLOPES:
-            directions = [SLOPES[c]]
-        else:
-            directions = DIRECTIONS
+	directions = DIRECTIONS
 
         valid_next = next_valid(map, pos, steps, directions)
         for next_tpl in valid_next:
