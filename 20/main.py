@@ -1,11 +1,16 @@
+from fractions import gcd
+import Queue
 import sys
-import queue
 
 HIGH = 'HIGH'
 LOW = 'LOW'
 
 ON = "ON"
 OFF = "OFF"
+
+def lcm(arr):
+    l=reduce(lambda x,y:(x*y)//gcd(x,y),arr)
+    return l
 
 class Module():
 
@@ -30,7 +35,6 @@ class Module():
                 print("wat?")
 
             out = self.modules[out_str]
-            print(self.name, pulse, '->', out.name);
 
             self.q.put((out.receive_pulse, [self, pulse]))
 
@@ -39,8 +43,14 @@ class Button(Module):
         self.send_pulse(LOW)
 
 class Untyped(Module):
+    def __init__(self, *args, **kwargs):
+        Module.__init__(self, *args, **kwargs)
+        self.received_low_pulse = False
+        self.inputs = []
+
     def receive_pulse(self, sender, pulse):
-        pass
+        if pulse == LOW:
+            self.received_low_pulse = True
 
 class Broadcaster(Module):
     def receive_pulse(self, sender, _):
@@ -68,6 +78,7 @@ class Conjunction(Module):
         Module.__init__(self, *args, **kwargs)
         self.inputs = []
         self.input_status = None
+        self.is_persist = {}
 
     def init_status(self):
         self.input_status = {}
@@ -82,11 +93,17 @@ class Conjunction(Module):
 
         return True
 
+    def reset_is_persist(self):
+        self.is_persist = {}
+
     def receive_pulse(self, sender, pulse):
         if not self.input_status:
             self.init_status()
 
         self.input_status[sender.name] = pulse
+
+        if self.name == "bn" and pulse == HIGH:
+            self.is_persist[sender.name] = HIGH
 
         if self.all_high():
             self.send_pulse(LOW)
@@ -95,7 +112,7 @@ class Conjunction(Module):
 
 def parse_modules(filename):
     fh = open(filename)
-    q = queue.Queue()
+    q = Queue.Queue()
 
     modules = {}
     for line in fh:
@@ -113,7 +130,7 @@ def parse_modules(filename):
 
     modules['button'] = Button(q, modules, 'button', ['broadcaster'])
 
-    to_add = []
+    untyped = {}
     for module_str in modules:
         module = modules[module_str]
         for output in module.outputs:
@@ -123,17 +140,23 @@ def parse_modules(filename):
             except AttributeError:
                 continue
             except KeyError:
-                to_add.append(Untyped(q, modules, output, []))
-                continue
+                if output not in untyped:
+                    untyped[output] = Untyped(q, modules, output, [])
+
+                output_module = untyped[output]
 
             output_module.inputs.append(module)
 
-    for m in to_add:
+    for name, m in untyped.items():
         modules[m.name] = m
 
-    return q, modules
+    return q, modules, untyped
 
-def push_the_button(q, modules):
+def push_the_button(q, modules, untyped):
+    for key in untyped:
+        logic_gate = untyped[key].inputs[0]
+
+    logic_gate.reset_is_persist()
     button = modules['button']
 
     q.put((button.smash_it, []))
@@ -149,17 +172,30 @@ def push_the_button(q, modules):
     for module_name, module in modules.items():
         nb_high += module.nb_high
         nb_low += module.nb_low
+        
+    is_persist = logic_gate.is_persist
 
-    return nb_high, nb_low
+    return nb_high, nb_low, is_persist
 
-# q, modules = parse_modules('input_test_1.txt')
-# q, modules = parse_modules('input_test_2.txt')
-q, modules = parse_modules('input.txt')
+# q, modules, untyped = parse_modules('input_test_1.txt')
+# q, modules, untyped = parse_modules('input_test_2.txt')
+q, modules, untyped = parse_modules('input.txt')
 
-for n in range(1000):
-    high_total, low_total = push_the_button(q, modules)
+button_presses = 0
+is_nb = {}
+while True:
+    if button_presses != 0 and button_presses % 10000 == 0:
+        print("Button pressed %s times" % button_presses)
 
-print(high_total)
-print(low_total)
-print(high_total * low_total)
+    high_total, low_total, is_persist = push_the_button(q, modules, untyped)
+    button_presses += 1
+    for key in is_persist:
+        pulse = is_persist[key]
+        if pulse == HIGH:
+            is_nb[key] = button_presses
 
+    if len(is_nb) == 4:
+        break
+
+print(is_nb)
+print(lcm(is_nb.values()))
