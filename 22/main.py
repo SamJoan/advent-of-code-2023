@@ -8,7 +8,7 @@ Z = 'Z'
 
 class Block():
     def __init__(self, start, end):
-        id = uuid.uuid4()
+        self.id = uuid.uuid4()
         self.start = start
         self.end = end
 
@@ -57,21 +57,26 @@ def create_3d_space(blocks):
 
     return space
 
+def populate_block(space, block):
+    var_coord = block.find_varying_coord()
+    s, e = block.start, block.end
+    if var_coord == X:
+        for x in range(s[0], e[0] + 1):
+            space[s[2]][s[1]][x] = block
+    elif var_coord == Y:
+        for y in range(s[1], e[1] + 1):
+            space[s[2]][y][s[0]] = block
+    elif var_coord == Z:
+        for z in range(s[2], e[2] + 1):
+            space[z][s[1]][s[0]] = block
+    elif var_coord == None:
+        space[s[2]][s[1]][s[0]] = block
+
+    return space
+
 def populate(space, blocks):
     for block in blocks:
-        var_coord = block.find_varying_coord()
-        s, e = block.start, block.end
-        if var_coord == X:
-            for x in range(s[0], e[0] + 1):
-                space[s[2]][s[1]][x] = block
-        elif var_coord == Y:
-            for y in range(s[1], e[1] + 1):
-                space[s[2]][y][s[0]] = block
-        elif var_coord == Z:
-            for z in range(s[2], e[2] + 1):
-                space[z][s[1]][s[0]] = block
-        elif var_coord == None:
-            space[s[2]][s[1]][s[0]] = block
+        space = populate_block(space, block)
 
     return space
 
@@ -92,9 +97,75 @@ def ps_x(space):
 
         print(s)
 
+def get_new_z(new_space, block):
+    z = block.start[2]
+    s, e = block.start, block.end
+
+    original_start_z = s[2]
+    original_end_z = e[2]
+
+    while True:
+        var_coord = block.find_varying_coord()
+
+        z = z - 1
+        if z == 0:
+            return z + 1, z + 1
+        if var_coord == X:
+            for x in range(s[0], e[0] + 1):
+                if new_space[z][s[1]][x] != '.':
+                    return z + 1, z + 1
+        elif var_coord == Y:
+            for y in range(s[1], e[1] + 1):
+                if new_space[z][y][s[0]] != '.':
+                    return z + 1, z + 1
+        elif var_coord == None:
+            if new_space[z][s[1]][s[0]] != '.':
+                return z + 1, z + 1
+        elif var_coord == Z:
+            if new_space[z][s[1]][s[0]] != '.':
+                return z + 1, z + 1 + (original_end_z - original_start_z)
+
+def apply_gravity(space):
+    new_space = create_3d_space(blocks)
+    new_blocks = []
+    already_dropped = set()
+    for z in space:
+        for y in space[z]:
+            for x in space[z][y]:
+                c = space[z][y][x]
+                if c != '.':
+                    block = c
+                    if block.id in already_dropped:
+                        continue
+
+                    start, end = block.start, block.end
+                    new_z_start, new_z_end = get_new_z(new_space, block)
+
+                    new_start = (start[0], start[1], new_z_start)
+                    new_end = (end[0], end[1], new_z_end)
+                    new_block = Block(new_start, new_end)
+
+                    populate_block(new_space, new_block)
+                    already_dropped.add(block.id)
+
+                    # if block.find_varying_coord() == Z:
+                    if z == 8:
+                        print("old:", start, end, "new:", new_start, new_end)
+
+        if z == 8:
+            # pprint(space[z])
+            # pprint(space[z - 1])
+            ps_x(new_space)
+            sys.exit()
+
+        
 blocks = parse_blocks("input_test.txt")
 space = create_3d_space(blocks)
 space = populate(space, blocks)
 
 ps_x(space)
+print
+
+space = apply_gravity(space)
+
 
