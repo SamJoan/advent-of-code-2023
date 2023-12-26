@@ -6,9 +6,14 @@ X = 'X'
 Y = 'Y'
 Z = 'Z'
 
+ID = -1
+
 class Block():
     def __init__(self, start, end):
-        self.id = uuid.uuid4()
+        global ID
+        ID += 1
+
+        self.id = ID
         self.start = start
         self.end = end
 
@@ -22,6 +27,56 @@ class Block():
         else:
             return None
 
+    def holding_me(self, new_space):
+        s, e = self.start, self.end
+        z = s[2] - 1
+        holding = set()
+        if z == 0:
+            return holding
+
+        var_coord = self.find_varying_coord()
+        if var_coord == X:
+            for x in range(s[0], e[0] + 1):
+                if new_space[z][s[1]][x] != '.':
+                    holding.add(new_space[z][s[1]][x])
+        elif var_coord == Y:
+            for y in range(s[1], e[1] + 1):
+                if new_space[z][y][s[0]] != '.':
+                    holding.add(new_space[z][y][s[0]])
+        elif var_coord == None:
+            if new_space[z][s[1]][s[0]] != '.':
+                holding.add(new_space[z][s[1]][s[0]])
+        elif var_coord == Z:
+            if new_space[z][s[1]][s[0]] != '.':
+                holding.add(new_space[z][s[1]][s[0]])
+        
+        return holding
+
+    def holding(self, new_space):
+        s, e = self.start, self.end
+        z = e[2] + 1
+        holding = set()
+        if z == 0:
+            return holding
+
+        var_coord = self.find_varying_coord()
+        if var_coord == X:
+            for x in range(s[0], e[0] + 1):
+                if new_space[z][s[1]][x] != '.':
+                    holding.add(new_space[z][s[1]][x])
+        elif var_coord == Y:
+            for y in range(s[1], e[1] + 1):
+                if new_space[z][y][s[0]] != '.':
+                    holding.add(new_space[z][y][s[0]])
+        elif var_coord == None:
+            if new_space[z][s[1]][s[0]] != '.':
+                holding.add(new_space[z][s[1]][s[0]])
+        elif var_coord == Z:
+            if new_space[z][s[1]][s[0]] != '.':
+                holding.add(new_space[z][s[1]][s[0]])
+        
+        return holding
+
 def parse_blocks(filename):
     fh = open(filename)
     blocks = []
@@ -31,6 +86,9 @@ def parse_blocks(filename):
         start = tuple([int(x) for x in start_str.split(',')])
         end = tuple([int(x) for x in end_str.split(',')])
         blocks.append(Block(start, end))
+
+    global ID
+    ID = -1
 
     return blocks
 
@@ -146,26 +204,38 @@ def apply_gravity(space):
                     new_block = Block(new_start, new_end)
 
                     populate_block(new_space, new_block)
+                    new_blocks.append(new_block)
                     already_dropped.add(block.id)
 
-                    # if block.find_varying_coord() == Z:
-                    if z == 8:
-                        print("old:", start, end, "new:", new_start, new_end)
+    return new_space, new_blocks
 
-        if z == 8:
-            # pprint(space[z])
-            # pprint(space[z - 1])
-            ps_x(new_space)
-            sys.exit()
+def count_disintegrable(new_space, blocks):
+    disintegrable = 0
+    for block in blocks:
+        holding = block.holding(new_space)
+        if len(holding) == 0:
+            disintegrable += 1
+            continue
 
+        all_held_by_another = True
+        for block_above in holding:
+            if len(block_above.holding_me(new_space)) == 1:
+                all_held_by_another = False
+
+        if all_held_by_another:
+            disintegrable += 1
+
+        print(disintegrable, block.id, len(holding), all_held_by_another)
+
+    return disintegrable
         
-blocks = parse_blocks("input_test.txt")
+# blocks = parse_blocks("input_test.txt")
+blocks = parse_blocks("input.txt")
 space = create_3d_space(blocks)
 space = populate(space, blocks)
 
-ps_x(space)
-print
-
-space = apply_gravity(space)
+space, blocks = apply_gravity(space)
+nb = count_disintegrable(space, blocks)
+print(nb)
 
 
