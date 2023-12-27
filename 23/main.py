@@ -39,7 +39,7 @@ def pm(map, pos):
 
         print(str)
 
-def next_valid(map, pos, steps, directions, already_visited):
+def next_valid(map, pos, steps, directions):
     max_y = len(map) - 1
     max_x = len(map[0]) - 1
 
@@ -71,16 +71,35 @@ def next_valid(map, pos, steps, directions, already_visited):
 
     return valid_next_tpl
 
+def find_nodes(map, start, end):
+    nodes = []
+    nodes.append(start)
+
+    for y, x_arr in enumerate(map):
+        for x, c in enumerate(x_arr):
+            if c != '#':
+                next = next_valid(map, (x, y), 0, DIRECTIONS)
+                if len(next) > 2:
+                    print(x, y, len(next))
+                    nodes.append((x, y))
+
+    nodes.append(end)
+    return nodes
+
 def get_nodes(map, start, end):
     q = Queue()
-    q.put((0, start, start, set()))
-    paths = []
+
     nodes = {}
-    nodes[start] = set()
+    node_list = find_nodes(map, start, end)
+    for node in node_list:
+        q.put((0, node, None, set()))
+        nodes[node] = set()
+
     while q:
         try:
             tpl = q.get(block=False)
         except Empty:
+            print("Finished, queue empty")
             break
 
         steps, pos, parent_node, already_visited = tpl
@@ -88,31 +107,24 @@ def get_nodes(map, start, end):
 
         if pos in already_visited:
             continue
-
         already_visited.add(pos)
-
-        if pos == end:
-            nodes[parent_node].add((x, y, steps))
 
 	directions = DIRECTIONS
 
-        valid_next = next_valid(map, pos, steps, directions, already_visited)
+        valid_next = next_valid(map, pos, steps, directions)
         for next_tpl in valid_next:
             next_x, next_y = next_tpl[1]
 
-            if len(valid_next) > 2:
+            if pos in node_list and parent_node != None:
                 nodes[parent_node].add((x, y, steps))
-                new_parent_node = (x, y)
-                if not new_parent_node in nodes:
-                    nodes[new_parent_node] = set()
-                    nodes[new_parent_node].add((parent_node[0], parent_node[1], steps))
 
                 # print(pos, len(valid_next), valid_next)
                 # pm(map, pos)
                 # print(nodes)
                 # raw_input()
-                av = set(already_visited)
-                q.put((1, next_tpl[1], new_parent_node, av))
+            elif pos in node_list:
+                p = pos
+                q.put((next_tpl[0], next_tpl[1], p, already_visited))
             else:
                 q.put((next_tpl[0], next_tpl[1], parent_node, already_visited))
         
@@ -122,8 +134,6 @@ def max_len_hike(nodes, start, end):
     q = Queue()
 
     q.put((0, start, set()))
-
-    print(end)
 
     max_steps = 0
     while q:
@@ -151,9 +161,10 @@ def max_len_hike(nodes, start, end):
 
     return max_steps
 
-# map, start, end = parse_map("input_test.txt")
-map, start, end = parse_map("input.txt")
+map, start, end = parse_map("input_test.txt")
+# map, start, end = parse_map("input.txt")
 nodes = get_nodes(map, start, end)
+pprint(nodes)
 max_len_hike = max_len_hike(nodes, start, end)
 
 print(max_len_hike)
