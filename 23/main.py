@@ -131,14 +131,14 @@ def get_nodes(map, start, end):
     return nodes
 
 def max_len_hike(nodes, start, end):
-    q = Queue()
+    q = PriorityQueue()
 
-    q.put((0, start, set()))
+    q.put((0, 0, start, set()))
 
     max_steps = 0
     while q:
         try:
-            steps, node, already_visited = q.get(block=False)
+            priority, steps, node, already_visited = q.get(block=False)
         except Empty:
             break
 
@@ -148,21 +148,22 @@ def max_len_hike(nodes, start, end):
             already_visited.add(node)
 
         if node == end:
-            print('ended on', steps)
             if steps > max_steps:
                 max_steps = steps
+            print('ended on', steps, max_steps, q.qsize())
             continue
 
         vertices = nodes[node]
         for vertex in vertices:
             x, y, vertex_steps = vertex
             new_av = set(already_visited)
-            q.put((steps + vertex_steps, (x, y), new_av))
+            new_steps = steps + vertex_steps
+            q.put((new_steps * -1, new_steps, (x, y), new_av))
 
     return max_steps
 
-map, start, end = parse_map("input_test.txt")
-# map, start, end = parse_map("input.txt")
+# map, start, end = parse_map("input_test.txt")
+map, start, end = parse_map("input.txt")
 nodes = get_nodes(map, start, end)
 pprint(nodes)
 max_len_hike = max_len_hike(nodes, start, end)
