@@ -1,6 +1,7 @@
 import sys
 from pprint import pprint
 from itertools import combinations
+import z3
 
 class Hailstone():
     def __init__(self, pos, velocity):
@@ -24,7 +25,6 @@ def parse_hailstones(filename):
         hs.append(h)
 
     return hs
-
 
 # https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
 # https://www.symbolab.com/solver/solve-for-x-calculator/solve%20for%20x%2C%20y%20%3D%20p%2B%5Cleft(x%20%5Ccdot%20m%5Cright)?or=input
@@ -63,12 +63,29 @@ def determine_collisions(hailstones, min, max):
 
     return in_area
 
+# Math is hard. Z3 is cheating, but a new tool for me, so I'm keen to learn it. Code from here:
+# https://github.com/nitekat1124/advent-of-code-2023/blob/main/solutions/day24.py
+def solve_through_magic(hailstones):
+    px, py, pz, vx, vy, vz = z3.Ints("px py pz vx vy vz")
+    times = [z3.Int("t" + str(i)) for i in range(len(hailstones))]
 
+    s = z3.Solver()
+    for i, hs in enumerate(hailstones):
+        s.add(px + vx * times[i] == hs.pos[0] + hs.velocity[0] * times[i])
+        s.add(py + vy * times[i] == hs.pos[1] + hs.velocity[1] * times[i])
+        s.add(pz + vz * times[i] == hs.pos[2] + hs.velocity[2] * times[i])
+
+    s.check()
+    ans = s.model().evaluate(px + py + pz)
+
+    return ans.as_long()
 
 # hailstones = parse_hailstones("input_test.txt")
-# collisions = determine_collisions(hailstones, 7, 27)
-
 hailstones = parse_hailstones("input.txt")
-collisions = determine_collisions(hailstones, 200000000000000, 400000000000000)
+# collisions = determine_collisions(hailstones, 7, 27)
+ans = solve_through_magic(hailstones)
+print(ans)
 
-print(collisions)
+
+# hailstones = parse_hailstones("input.txt")
+# collisions = determine_collisions(hailstones, 200000000000000, 400000000000000)
