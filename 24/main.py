@@ -75,6 +75,9 @@ def solve_through_magic(hailstones):
         s.add(py + vy * times[i] == hs.pos[1] + hs.velocity[1] * times[i])
         s.add(pz + vz * times[i] == hs.pos[2] + hs.velocity[2] * times[i])
 
+        if i == 5:
+            break
+
     s.check()
     ans = s.model().evaluate(px + py + pz)
 
