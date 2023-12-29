@@ -33,6 +33,8 @@ G = nx.Graph()
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
 
+# I found this solution by playing around with networkx, but I didn't know why it worked so I asked on reddit.
+# https://old.reddit.com/r/adventofcode/comments/18tj28f/2023_day_25_why_does_my_solution_work/?
 groups = list(k_edge_components(G, 4))
 a = len(groups[0])
 b = len(groups[1])
