@@ -37,10 +37,16 @@ MU_TEST(test_sample_file) {
     mu_check(result == 13);
 }
 
+MU_TEST(test_sample_file_2) {
+    int result = solve_part_2("input_test.txt");
+    mu_check(result == 30);
+}
+
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_parse_winning_numbers);*/
     /*MU_RUN_TEST(test_calculate_score);*/
-    MU_RUN_TEST(test_sample_file);
+    /*MU_RUN_TEST(test_sample_file);*/
+    MU_RUN_TEST(test_sample_file_2);
 }
 
 int run_tests() {
