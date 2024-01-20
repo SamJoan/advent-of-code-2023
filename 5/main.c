@@ -21,11 +21,13 @@ void seeds_parse(Seeds *seeds, char *line) {
     }
 }
 
-void map_parse_name(Map *map, char *line) {
+void map_parse_name_line(Map *map, char *line) {
     map->name = strdup(strtok_r(line, " ", &line));
+    map->len = 0;
+    map->rules = NULL;
 }
 
-void tr_parse(TranslationRule *tr, char *line) {
+void tr_parse(Map *map, TranslationRule *tr, char *line) {
     char *token = NULL;
     uint64_t src = 0LLU;
     uint64_t dst = 0LLU;
@@ -50,6 +52,16 @@ void tr_parse(TranslationRule *tr, char *line) {
     tr->dst_end = dst + range - 1;
     tr->src_start = src;
     tr->src_end = src + range - 1;
+
+    map->len += 1;
+    map->rules = realloc(map->rules, sizeof(TranslationRule*) * map->len);
+    map->rules[map->len - 1] = tr;
+}
+
+void maps_add_map(Maps *maps, Map *map) {
+    maps->len += 1;
+    maps->maps = realloc(maps->maps, sizeof(Map*) * maps->len);
+    maps->maps[maps->len - 1] = map;
 }
 
 void parse_almanac(const char* filename, Seeds **seeds_out, Maps **maps_out) {
@@ -64,10 +76,8 @@ void parse_almanac(const char* filename, Seeds **seeds_out, Maps **maps_out) {
         exit(EXIT_FAILURE);
 
     int i = 0;
-
     Seeds *seeds = malloc(sizeof(Seeds));
     Maps *maps = malloc(sizeof(Maps));
-
     maps->len = 0;
     maps->maps = NULL;
     
@@ -79,32 +89,23 @@ void parse_almanac(const char* filename, Seeds **seeds_out, Maps **maps_out) {
             bool parsing_map_name = strchr(line, ':') != NULL;
             if(parsing_map_name) {
                 if(map != NULL) {
-                    maps->len += 1;
-                    maps->maps = realloc(maps->maps, sizeof(Map*) * maps->len);
-                    maps->maps[maps->len - 1] = map;
+                    maps_add_map(maps, map);
                 }
 
                 map = malloc(sizeof(Map));
-                map_parse_name(map, line);
-                map->len = 0;
-                map->rules = NULL;
+                map_parse_name_line(map, line);
             } else {
                 bool empty_line = strlen(line) == 1;
                 if(!empty_line) {
                     TranslationRule *tr = malloc(sizeof(TranslationRule));
-                    tr_parse(tr, line);
-                    map->len += 1;
-                    map->rules = realloc(map->rules, sizeof(TranslationRule*) * map->len);
-                    map->rules[map->len - 1] = tr;
+                    tr_parse(map, tr, line);
                 }
             }
         }
         i++;
     }
 
-    maps->len += 1;
-    maps->maps = realloc(maps->maps, sizeof(Map*) * maps->len);
-    maps->maps[maps->len - 1] = map;
+    maps_add_map(maps, map);
 
     fclose(fp);
     if (line)
