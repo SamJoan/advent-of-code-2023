@@ -4,7 +4,6 @@ typedef struct {
     uint64_t src_start;
     uint64_t src_end;
     uint64_t dst_start;
-    uint64_t dst_end;
 } TranslationRule;
 
 typedef struct {
@@ -23,4 +22,7 @@ typedef struct {
     int len;
 } Maps;
 
+uint64_t solve_part_1(char *filename);
+void maps_free(Maps *maps);
 void parse_almanac(const char* filename, Seeds **seeds, Maps **maps);
+void seeds_free(Seeds *seeds);

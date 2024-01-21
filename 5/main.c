@@ -49,7 +49,6 @@ void tr_parse(Map *map, TranslationRule *tr, char *line) {
     }
 
     tr->dst_start = dst;
-    tr->dst_end = dst + range - 1;
     tr->src_start = src;
     tr->src_end = src + range - 1;
 
@@ -115,6 +114,71 @@ void parse_almanac(const char* filename, Seeds **seeds_out, Maps **maps_out) {
     *maps_out = maps;
 }
 
+uint64_t tr_translate(const TranslationRule *tr, const uint64_t curr) {
+    if(curr >= tr->src_start && curr <= tr->src_end) {
+        return tr->dst_start + (curr - tr->src_start);
+    }
+
+    return curr;
+}
+
+uint64_t translate_to_location(const Maps *maps, const uint64_t seed) {
+    uint64_t curr = seed;
+    for(int i = 0; i < maps->len; i++) {
+        Map *map = maps->maps[i];
+        for(int j = 0; j < map->len; j++) {
+            TranslationRule *tr = map->rules[j];
+            uint64_t translation = tr_translate(tr, curr);
+            if(translation != curr) {
+                curr = translation;
+                break;
+            }
+        }
+    }
+
+    return curr;
+}
+
+uint64_t solve_part_1(char *filename) {
+    Seeds *seeds = NULL;
+    Maps *maps = NULL;
+
+    parse_almanac(filename, &seeds, &maps);
+
+    uint64_t min_loc = 0;
+    for(int i = 0; i < seeds->len; i++) {
+        uint64_t seed = seeds->seeds[i];
+        uint64_t location = translate_to_location(maps, seed);
+
+        if(min_loc == 0 || location < min_loc) {
+            min_loc = location;
+        }
+    }
+
+    maps_free(maps);
+    seeds_free(seeds);
+
+    return min_loc;
+}
+
+void maps_free(Maps *maps) {
+    for(int i = 0; i < maps->len; i++) {
+        for(int j = 0; j < maps->maps[i]->len; j++) {
+            free(maps->maps[i]->rules[j]);
+        }
+        free(maps->maps[i]->rules);
+        free(maps->maps[i]->name);
+        free(maps->maps[i]);
+    }
+    free(maps->maps);
+    free(maps);
+}
+
+void seeds_free(Seeds *seeds) {
+    free(seeds->seeds);
+    free(seeds);
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
@@ -122,6 +186,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
+        uint64_t result = solve_part_1("input.txt");
+        printf("%lu\n", result);
 
 	exit(EXIT_SUCCESS);
     } else {
