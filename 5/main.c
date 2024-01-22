@@ -161,6 +161,70 @@ uint64_t solve_part_1(char *filename) {
     return min_loc;
 }
 
+Intervals *parse_intervals(Seeds *seeds) {
+    Intervals *out = malloc(sizeof(Intervals));
+    out->len = 0;
+    out->vals = NULL;
+    int nb = 0;
+    for(int i = 0; i < seeds->len; i += 2) {
+        out->len = nb + 1;
+        out->vals = realloc(out->vals, out->len * (sizeof(Interval*)));
+
+        uint64_t start = seeds->seeds[i];
+        uint64_t range = seeds->seeds[i + 1];
+        uint64_t end = start + range - 1;
+
+        Interval *interval = malloc(sizeof(Interval));
+        interval->start = start;
+        interval->end = end;
+        out->vals[nb] = interval;
+
+        nb++;
+    }
+
+    return out;
+}
+
+void intervals_free(Intervals *intervals) {
+    for(int i = 0; i < intervals->len; i++) {
+        free(intervals->vals[i]);
+    }
+
+    free(intervals->vals);
+    free(intervals);
+}
+
+uint64_t solve_part_2(char *filename) {
+    Seeds *seeds = NULL;
+    Maps *maps = NULL;
+
+    parse_almanac(filename, &seeds, &maps);
+    Intervals *intervals = parse_intervals(seeds);
+
+    uint64_t min_loc = 0;
+    uint64_t nb = 0;
+    for(int i = 0; i < intervals->len; i++) {
+        Interval *interval = intervals->vals[i];
+        for(uint64_t seed = interval->start; seed <= interval->end; seed++) {
+            if(nb % 100000 == 0 && nb != 0) {
+                printf("%lu attempts\n", nb);
+            }
+            uint64_t location = translate_to_location(maps, seed);
+
+            if(min_loc == 0 || location < min_loc) {
+                min_loc = location;
+            }
+            nb++;
+        }
+    }
+
+    maps_free(maps);
+    seeds_free(seeds);
+    intervals_free(intervals);
+
+    return min_loc;
+}
+
 void maps_free(Maps *maps) {
     for(int i = 0; i < maps->len; i++) {
         for(int j = 0; j < maps->maps[i]->len; j++) {
@@ -186,7 +250,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
-        uint64_t result = solve_part_1("input.txt");
+        /*uint64_t result = solve_part_1("input.txt");*/
+        uint64_t result = solve_part_2("input.txt");
         printf("%lu\n", result);
 
 	exit(EXIT_SUCCESS);

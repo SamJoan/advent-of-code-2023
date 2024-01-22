@@ -22,7 +22,18 @@ typedef struct {
     int len;
 } Maps;
 
+typedef struct {
+    uint64_t start;
+    uint64_t end;
+} Interval;
+
+typedef struct {
+    Interval **vals;
+    int len;
+} Intervals;
+
 uint64_t solve_part_1(char *filename);
+uint64_t solve_part_2(char *filename);
 void maps_free(Maps *maps);
 void parse_almanac(const char* filename, Seeds **seeds, Maps **maps);
 void seeds_free(Seeds *seeds);
