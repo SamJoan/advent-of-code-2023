@@ -37,3 +37,4 @@ uint64_t solve_part_2(char *filename);
 void maps_free(Maps *maps);
 void parse_almanac(const char* filename, Seeds **seeds, Maps **maps);
 void seeds_free(Seeds *seeds);
+void split_interval(Interval *interval, TranslationRule *tr, Interval **before, Interval **applied, Interval **after);

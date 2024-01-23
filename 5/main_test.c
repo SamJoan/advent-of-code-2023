@@ -51,10 +51,129 @@ MU_TEST(test_solve_part_2) {
     mu_check(result == 46);
 }
 
+MU_TEST(test_split_interval) {
+    Interval *before = NULL;
+    Interval *applied = NULL;
+    Interval *after = NULL;
+
+    TranslationRule *tr = malloc(sizeof(TranslationRule));
+    tr->src_start = 10;
+    tr->src_end = 20;
+    tr->dst_start = 110;
+
+    Interval *interval = malloc(sizeof(Interval));
+    interval->start = 5;
+    interval->end = 25;
+
+    split_interval(interval, tr, &before, &applied, &after);
+
+    mu_check(before->start == 5);
+    mu_check(before->end == 9);
+    mu_check(applied->start == 110);
+    mu_check(applied->end == 120);
+    mu_check(after->start == 21);
+    mu_check(after->end == 25);
+
+    free(tr);
+    free(interval);
+    free(before);
+    free(applied);
+    free(after);
+}
+
+MU_TEST(test_split_interval_after) {
+    Interval *before = NULL;
+    Interval *applied = NULL;
+    Interval *after = NULL;
+
+    TranslationRule *tr = malloc(sizeof(TranslationRule));
+    tr->src_start = 10;
+    tr->src_end = 20;
+    tr->dst_start = 110;
+
+    Interval *interval = malloc(sizeof(Interval));
+    interval->start = 13;
+    interval->end = 25;
+
+    split_interval(interval, tr, &before, &applied, &after);
+
+    mu_check(before == NULL);
+    mu_check(applied->start == 113);
+    mu_check(applied->end == 120);
+    mu_check(after->start == 21);
+    mu_check(after->end == 25);
+
+    free(tr);
+    free(interval);
+    free(before);
+    free(applied);
+    free(after);
+}
+
+MU_TEST(test_split_interval_before) {
+    Interval *before = NULL;
+    Interval *applied = NULL;
+    Interval *after = NULL;
+
+    TranslationRule *tr = malloc(sizeof(TranslationRule));
+    tr->src_start = 10;
+    tr->src_end = 20;
+    tr->dst_start = 110;
+
+    Interval *interval = malloc(sizeof(Interval));
+    interval->start = 5;
+    interval->end = 15;
+
+    split_interval(interval, tr, &before, &applied, &after);
+
+    mu_check(before->start == 5);
+    mu_check(before->end == 9);
+    mu_check(applied->start == 110);
+    mu_check(applied->end == 115);
+    mu_check(after == NULL);
+
+    free(tr);
+    free(interval);
+    free(before);
+    free(applied);
+    free(after);
+}
+
+MU_TEST(test_split_interval_partial) {
+    Interval *before = NULL;
+    Interval *applied = NULL;
+    Interval *after = NULL;
+
+    TranslationRule *tr = malloc(sizeof(TranslationRule));
+    tr->src_start = 10;
+    tr->src_end = 20;
+    tr->dst_start = 110;
+
+    Interval *interval = malloc(sizeof(Interval));
+    interval->start = 12;
+    interval->end = 18;
+
+    split_interval(interval, tr, &before, &applied, &after);
+
+    mu_check(before == NULL);
+    mu_check(applied->start == 112);
+    mu_check(applied->end == 118);
+    mu_check(after == NULL);
+
+    free(tr);
+    free(interval);
+    free(before);
+    free(applied);
+    free(after);
+}
 MU_TEST_SUITE(test_suite) {
     MU_RUN_TEST(test_parse_almanac);
     MU_RUN_TEST(test_solve_part_1);
     MU_RUN_TEST(test_solve_part_2);
+    MU_RUN_TEST(test_split_interval);
+    MU_RUN_TEST(test_split_interval_after);
+    MU_RUN_TEST(test_split_interval_before);
+    MU_RUN_TEST(test_split_interval_partial);
 }
 
 int run_tests() {
