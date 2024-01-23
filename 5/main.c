@@ -286,12 +286,12 @@ uint64_t solve_part_2(char *filename) {
         in_intervals = out_intervals;
     }
 
-    uint64_t min_loc = 0;
+    int64_t min_loc = -1;
     for(int i = 0; i < out_intervals->len; i++) {
         Interval *interval = out_intervals->vals[i];
 
         /*printf("min_loc %lu int %lu\n", min_loc, interval->start);*/
-        if(min_loc == 0 || interval->start < min_loc) {
+        if(min_loc == -1 || interval->start < min_loc) {
             min_loc = interval->start;
         }
     }
