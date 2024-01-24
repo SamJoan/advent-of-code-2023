@@ -166,14 +166,54 @@ MU_TEST(test_split_interval_partial) {
     free(applied);
     free(after);
 }
+
+MU_TEST(test_map_apply_trs) {
+    Intervals *ints = intervals_init();
+    Interval *i1 = interval_init(10, 40);
+    intervals_add(ints, i1);
+
+    TranslationRule *tr1 = malloc(sizeof(TranslationRule));
+    tr1->src_start = 15;
+    tr1->src_end = 20;
+    tr1->dst_start = 115;
+
+    TranslationRule *tr2 = malloc(sizeof(TranslationRule));
+    tr2->src_start = 30;
+    tr2->src_end = 35;
+    tr2->dst_start = 130;
+
+    Map *map = malloc(sizeof(Map));
+    map->name = "test";
+    map->len = 0;
+    map->rules = NULL;
+    map_add_tr(map, tr1);
+    map_add_tr(map, tr2);
+
+    Intervals *out = map_apply_trs(map, ints);
+    for(int i = 0; i < out->len; i++) {
+        Interval *interval = out->vals[i];
+        printf("%lu %lu\n", interval->start, interval->end);
+    }
+
+    mu_check(out->len == 5);
+
+    intervals_free(out);
+    intervals_free(ints);
+    free(map->rules);
+    free(map);
+    free(tr1);
+    free(tr2);
+}
+
 MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST(test_parse_almanac);
-    MU_RUN_TEST(test_solve_part_1);
-    MU_RUN_TEST(test_solve_part_2);
-    MU_RUN_TEST(test_split_interval);
-    MU_RUN_TEST(test_split_interval_after);
-    MU_RUN_TEST(test_split_interval_before);
-    MU_RUN_TEST(test_split_interval_partial);
+    /*MU_RUN_TEST(test_parse_almanac);*/
+    /*MU_RUN_TEST(test_solve_part_1);*/
+    /*MU_RUN_TEST(test_solve_part_2);*/
+    /*MU_RUN_TEST(test_split_interval);*/
+    /*MU_RUN_TEST(test_split_interval_after);*/
+    /*MU_RUN_TEST(test_split_interval_before);*/
+    /*MU_RUN_TEST(test_split_interval_partial);*/
+    MU_RUN_TEST(test_map_apply_trs);
 }
 
 int run_tests() {

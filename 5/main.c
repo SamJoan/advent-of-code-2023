@@ -27,6 +27,12 @@ void map_parse_name_line(Map *map, char *line) {
     map->rules = NULL;
 }
 
+void map_add_tr(Map *map, TranslationRule *tr) {
+    map->len += 1;
+    map->rules = realloc(map->rules, sizeof(TranslationRule*) * map->len);
+    map->rules[map->len - 1] = tr;
+}
+
 void tr_parse(Map *map, TranslationRule *tr, char *line) {
     char *token = NULL;
     uint64_t src = 0LLU;
@@ -52,9 +58,7 @@ void tr_parse(Map *map, TranslationRule *tr, char *line) {
     tr->src_start = src;
     tr->src_end = src + range - 1;
 
-    map->len += 1;
-    map->rules = realloc(map->rules, sizeof(TranslationRule*) * map->len);
-    map->rules[map->len - 1] = tr;
+    map_add_tr(map, tr);
 }
 
 void maps_add_map(Maps *maps, Map *map) {
@@ -227,56 +231,80 @@ void split_interval(Interval *interval, TranslationRule *tr, Interval **before, 
     *applied = interval_init(tr->dst_start + start_offset, tr->dst_start + end_offset);
 } 
 
-Intervals *map_apply_trs(Map *map, Intervals *intervals) {
+Intervals * intervals_dup(Intervals *intervals_in) {
+    Intervals *intervals_out = intervals_init();
+    for(int i = 0; i < intervals_in->len; i++) {
+        Interval *in = intervals_in->vals[i];
+        Interval *out = interval_init(in->start, in->end);
+        intervals_add(intervals_out, out);
+    }
+
+    return intervals_out;
+}
+
+Intervals *map_apply_trs(Map *map, Intervals *intervals_in) {
     Intervals *out = intervals_init();
-    for(int i = 0; i < intervals->len; i++) {
-        Interval *interval = intervals->vals[i];
-        bool rule_applied = false;
-        for(int r = 0; r < map->len; r++) {
-            TranslationRule *tr = map->rules[r];
+    Intervals *remaining = intervals_dup(intervals_in);
 
-            bool rule_applies = !(interval->end < tr->src_start || interval->start > tr->src_end);
-            if(rule_applies) {
-                rule_applied = true;
-                /*printf("map %s int %lu -> %lu , tr %lu -> %lu, towards %lu\n", map->name, interval->start, interval->end, tr->src_start, tr->src_end, tr->dst_start);*/
-                Interval *before = NULL;
-                Interval *applied = NULL;
-                Interval *after = NULL;
+    Intervals *next_remaining;
+    while(remaining->len != 0) {
+        next_remaining = intervals_init();
+        for(int i = 0; i < remaining->len; i++) {
+            Interval *interval = remaining->vals[i];
+            bool rule_applied = false;
+            for(int r = 0; r < map->len; r++) {
+                TranslationRule *tr = map->rules[r];
 
-                split_interval(interval, tr, &before, &applied, &after);
-                
-                if(before != NULL) {
-                    /*printf("before: %lu %lu\n", before->start, before->end);*/
-                    intervals_add(out, before);
+                bool rule_applies = !(interval->end < tr->src_start || interval->start > tr->src_end);
+                if(rule_applies) {
+                    rule_applied = true;
+                    Interval *before = NULL;
+                    Interval *applied = NULL;
+                    Interval *after = NULL;
+
+                    split_interval(interval, tr, &before, &applied, &after);
+                    
+                    if(before != NULL) {
+                        intervals_add(next_remaining, before);
+                    }
+                    intervals_add(out, applied);
+                    if(after != NULL) {
+                        intervals_add(next_remaining, after);
+                    }
+
+                    break;
                 }
-                /*printf("applied: %lu %lu\n", applied->start, applied->end);*/
-                intervals_add(out, applied);
-                if(after != NULL) {
-                    /*printf("after: %lu %lu\n", after->start, after->end);*/
-                    intervals_add(out, after);
-                }
-            } else {
-                /*printf("notapp map %s int %lu -> %lu , tr %lu -> %lu, towards %lu\n", map->name, interval->start, interval->end, tr->src_start, tr->src_end, tr->dst_start);*/
+            }
+
+            if(!rule_applied) {
+                Interval *new_interval = interval_init(interval->start, interval->end);
+                intervals_add(out, new_interval);
             }
         }
 
-        if(!rule_applied) {
-            Interval *new_interval = interval_init(interval->start, interval->end);
-            intervals_add(out, new_interval);
-        }
+        intervals_free(remaining);
+        remaining = next_remaining;
+
+        /*printf("out: %d\n", out->len);*/
+        /*for(int i = 0; i < out->len; i++) {*/
+            /*Interval *interval = out->vals[i];*/
+            /*printf("%lu %lu\n", interval->start, interval->end);*/
+        /*}*/
+        /*printf("remaining: %d\n", remaining->len);*/
+        /*for(int i = 0; i < remaining->len; i++) {*/
+            /*Interval *interval = remaining->vals[i];*/
+            /*printf("%lu %lu\n", interval->start, interval->end);*/
+        /*}*/
+
+        /*printf("\n\n");*/
     }
+
+    intervals_free(next_remaining);
 
     return out;
 }
 
-uint64_t solve_part_2(char *filename) {
-    Seeds *seeds = NULL;
-    Maps *maps = NULL;
-
-    parse_almanac(filename, &seeds, &maps);
-
-    uint64_t nb = 0;
-    Intervals *in_intervals = intervals_parse(seeds);
+Intervals *maps_apply_tr(Maps *maps, Intervals *in_intervals) {
     Intervals *out_intervals = NULL;
     for(int m = 0; m < maps->len; m++) {
         Map *map = maps->maps[m];
@@ -285,6 +313,17 @@ uint64_t solve_part_2(char *filename) {
         intervals_free(in_intervals);
         in_intervals = out_intervals;
     }
+
+    return out_intervals;
+}
+
+uint64_t solve_part_2(char *filename) {
+    Seeds *seeds = NULL;
+    Maps *maps = NULL;
+
+    parse_almanac(filename, &seeds, &maps);
+    Intervals *in_intervals = intervals_parse(seeds);
+    Intervals *out_intervals = maps_apply_tr(maps, in_intervals);
 
     int64_t min_loc = -1;
     for(int i = 0; i < out_intervals->len; i++) {
