@@ -206,13 +206,13 @@ MU_TEST(test_map_apply_trs) {
 }
 
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_parse_almanac);*/
-    /*MU_RUN_TEST(test_solve_part_1);*/
-    /*MU_RUN_TEST(test_solve_part_2);*/
-    /*MU_RUN_TEST(test_split_interval);*/
-    /*MU_RUN_TEST(test_split_interval_after);*/
-    /*MU_RUN_TEST(test_split_interval_before);*/
-    /*MU_RUN_TEST(test_split_interval_partial);*/
+    MU_RUN_TEST(test_parse_almanac);
+    MU_RUN_TEST(test_solve_part_1);
+    MU_RUN_TEST(test_solve_part_2);
+    MU_RUN_TEST(test_split_interval);
+    MU_RUN_TEST(test_split_interval_after);
+    MU_RUN_TEST(test_split_interval_before);
+    MU_RUN_TEST(test_split_interval_partial);
     MU_RUN_TEST(test_map_apply_trs);
 }
 
