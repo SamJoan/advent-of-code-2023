@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "main.h"
 #include "main_test.h"
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -8,12 +9,68 @@
 #include <stdlib.h>
 #include <string.h>
 
+void determine_combos(Hand *hand, int *highest, int *second_highest) {
+    int arr_size = 256;
+    int count[arr_size];
+
+    for(int i = 0; i < arr_size; i++) {
+        count[i] = 0;
+    }
+
+    for(int i = 0; i < strlen(hand->cards); i++) {
+        char c = hand->cards[i];
+        count[c]++;
+    }
+
+    for(int i = 0; i < arr_size; i++) {
+        if(count[i] != 0) {
+            if(count[i] > *highest) {
+                *second_highest = *highest;
+                *highest = count[i];
+            } else if(count[i] > *second_highest) {
+                *second_highest = count[i];
+            }
+        }
+    }
+}
+
+enum HandType hand_determine_type(Hand *hand) {
+    int highest = 0;
+    int second_highest = 0;
+    determine_combos(hand, &highest, &second_highest);
+
+    if(highest == 5) {
+        return FIVE;
+    } else if(highest == 4) {
+        return FOUR;
+    } else if(highest == 3) {
+        if(second_highest == 2) {
+            return FULL;
+        } else {
+            return THREE;
+        }
+    } else if(highest == 2) {
+        if(second_highest == 2) {
+            return TWO_PAIR;
+        } else {
+            return PAIR;
+        }
+    } else if(highest == 1) {
+        return HIGH;
+    } else {
+        printf("Invalid card counts.\n");
+        exit(1);
+    }
+
+    return 0;
+}
+
 Hand *hand_init(char *cards, uint64_t bid) {
     Hand *hand = malloc(sizeof(Hand));
 
-    hand->len = strlen(cards);
     hand->bid = bid;
-    hand->cards = cards;
+    hand->cards = strdup(cards);
+    hand->type = hand_determine_type(hand);
 
     return hand;
 }
@@ -67,6 +124,7 @@ Hands *parse_hands(const char *filename) {
                 } else if(i == 1) {
                     sscanf(token, "%lu", &bid);
                     Hand *hand = hand_init(cards_str, bid);
+                    free(cards_str);
                     hands_add(hands, hand);
                 } else {
                     printf("Issue splitting line\n");
@@ -86,24 +144,74 @@ Hands *parse_hands(const char *filename) {
         return hands;
 }
 
+int individual_card_compare(char *cards_a, char *cards_b) {
+    int arr_size = 256;
+    int rep[arr_size];
+
+    for(int i = 0; i < arr_size; i++) {
+        rep[i] = i;
+    }
+
+    rep['2'] = 2;
+    rep['3'] = 3;
+    rep['4'] = 4;
+    rep['5'] = 5;
+    rep['6'] = 6;
+    rep['7'] = 7;
+    rep['8'] = 8;
+    rep['9'] = 9;
+    rep['T'] = 10;
+    rep['J'] = 11;
+    rep['Q'] = 12;
+    rep['K'] = 13;
+    rep['A'] = 14;
+
+    assert(strlen(cards_a) == strlen(cards_b));
+
+    for(int i = 0; i < strlen(cards_a); i++) {
+        char c = cards_a[i];
+        char c2 = cards_b[i];
+        int card_cmp = rep[c] - rep[c2];
+        if(card_cmp != 0) {
+            return card_cmp;
+        }
+    }
+
+    return 0;
+}
+
 int hand_compare(const void *hand_a_in, const void *hand_b_in) {
     Hand *hand_a = *(Hand **) hand_a_in;
     Hand *hand_b = *(Hand **) hand_b_in;
-    printf("%s < %s?\n", hand_a->cards, hand_b->cards);
-    return -1;
+
+    int type_compare = hand_a->type - hand_b->type;
+
+    if(type_compare == 0) {
+        return individual_card_compare(hand_a->cards, hand_b->cards);
+    }
+
+    return type_compare;
+}
+
+void hands_sort(Hands *hands) {
+    qsort(hands->data, hands->len, sizeof(Hand*), hand_compare);
 }
 
 uint64_t solve_part_1(const char *filename) {
     Hands *hands = parse_hands(filename);
 
-    qsort(hands->data, hands->len, sizeof(Hand*), hand_compare);
-    for(int i = 0; i < hands->len; i++) {
-        printf("%p %s %lu\n", hands->data[i], hands->data[i]->cards, hands->data[i]->bid);
+    hands_sort(hands);
+
+    uint64_t result = 0;
+    for(uint64_t i = 0; i < hands->len; i++) {
+        Hand *hand = hands->data[i];
+        uint64_t rank = i + 1;
+        result = result + (hand->bid * rank);
     }
 
     hands_free(hands);
 
-    return 0;
+    return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -113,6 +221,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
+        uint64_t result = solve_part_1("input.txt");
+        printf("%lu\n", result);
 
 	exit(EXIT_SUCCESS);
     } else {
