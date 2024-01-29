@@ -88,10 +88,10 @@ MU_TEST(test_solve_part_1) {
 }
 
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_parse_hands);*/
-    /*MU_RUN_TEST(test_hand_compare);*/
-    /*MU_RUN_TEST(test_individual_card_compare);*/
-    /*MU_RUN_TEST(test_hands_sort);*/
+    MU_RUN_TEST(test_parse_hands);
+    MU_RUN_TEST(test_hand_compare);
+    MU_RUN_TEST(test_individual_card_compare);
+    MU_RUN_TEST(test_hands_sort);
     MU_RUN_TEST(test_solve_part_1);
 }
 
