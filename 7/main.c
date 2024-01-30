@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void determine_combos(Hand *hand, int *highest, int *second_highest) {
+void determine_combos(Hand *hand, int *highest, int *second_highest, bool jokers) {
     int arr_size = 256;
     int count[arr_size];
 
@@ -22,6 +22,18 @@ void determine_combos(Hand *hand, int *highest, int *second_highest) {
         count[c]++;
     }
 
+    int nb_jokers = 0;
+    if(jokers) {
+        nb_jokers = count['J'];
+        if(nb_jokers == 5) {
+            *highest = 5;
+            *second_highest = 0;
+            return;
+        } else if(nb_jokers > 0)  {
+            count['J'] = 0;
+        }
+    }
+
     for(int i = 0; i < arr_size; i++) {
         if(count[i] != 0) {
             if(count[i] > *highest) {
@@ -32,12 +44,16 @@ void determine_combos(Hand *hand, int *highest, int *second_highest) {
             }
         }
     }
+
+    if(jokers) {
+        *highest += nb_jokers;
+    }
 }
 
-enum HandType hand_determine_type(Hand *hand) {
+enum HandType hand_determine_type(Hand *hand, bool jokers) {
     int highest = 0;
     int second_highest = 0;
-    determine_combos(hand, &highest, &second_highest);
+    determine_combos(hand, &highest, &second_highest, jokers);
 
     if(highest == 5) {
         return FIVE;
@@ -58,19 +74,19 @@ enum HandType hand_determine_type(Hand *hand) {
     } else if(highest == 1) {
         return HIGH;
     } else {
-        printf("Invalid card counts.\n");
+        printf("Invalid card counts. Highest %d.\n", highest);
         exit(1);
     }
 
     return 0;
 }
 
-Hand *hand_init(char *cards, uint64_t bid) {
+Hand *hand_init(char *cards, uint64_t bid, bool jokers) {
     Hand *hand = malloc(sizeof(Hand));
 
     hand->bid = bid;
     hand->cards = strdup(cards);
-    hand->type = hand_determine_type(hand);
+    hand->type = hand_determine_type(hand, jokers);
 
     return hand;
 }
@@ -99,7 +115,7 @@ void hands_add(Hands *hands, Hand *hand) {
     hands->data[hands->len - 1] = hand;
 }
 
-Hands *parse_hands(const char *filename) {
+Hands *parse_hands(const char *filename, bool jokers) {
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
@@ -123,7 +139,7 @@ Hands *parse_hands(const char *filename) {
                     cards_str = strdup(token);
                 } else if(i == 1) {
                     sscanf(token, "%lu", &bid);
-                    Hand *hand = hand_init(cards_str, bid);
+                    Hand *hand = hand_init(cards_str, bid, jokers);
                     free(cards_str);
                     hands_add(hands, hand);
                 } else {
@@ -144,7 +160,7 @@ Hands *parse_hands(const char *filename) {
         return hands;
 }
 
-int individual_card_compare(char *cards_a, char *cards_b) {
+int individual_card_compare(char *cards_a, char *cards_b, bool jokers) {
     int arr_size = 256;
     int rep[arr_size];
 
@@ -161,7 +177,11 @@ int individual_card_compare(char *cards_a, char *cards_b) {
     rep['8'] = 8;
     rep['9'] = 9;
     rep['T'] = 10;
-    rep['J'] = 11;
+    if(jokers) {
+        rep['J'] = 1;
+    } else {
+        rep['J'] = 11;
+    }
     rep['Q'] = 12;
     rep['K'] = 13;
     rep['A'] = 14;
@@ -180,27 +200,29 @@ int individual_card_compare(char *cards_a, char *cards_b) {
     return 0;
 }
 
-int hand_compare(const void *hand_a_in, const void *hand_b_in) {
+int hand_compare(const void *hand_a_in, const void *hand_b_in, void *jokers_in) {
     Hand *hand_a = *(Hand **) hand_a_in;
     Hand *hand_b = *(Hand **) hand_b_in;
+
+    bool jokers = *(bool *) jokers_in;
 
     int type_compare = hand_a->type - hand_b->type;
 
     if(type_compare == 0) {
-        return individual_card_compare(hand_a->cards, hand_b->cards);
+        return individual_card_compare(hand_a->cards, hand_b->cards, jokers);
     }
 
     return type_compare;
 }
 
-void hands_sort(Hands *hands) {
-    qsort(hands->data, hands->len, sizeof(Hand*), hand_compare);
+void hands_sort(Hands *hands, bool jokers) {
+    qsort_r(hands->data, hands->len, sizeof(Hand*), hand_compare, &jokers);
 }
 
-uint64_t solve_part_1(const char *filename) {
-    Hands *hands = parse_hands(filename);
+uint64_t solve_part_1(const char *filename, bool jokers) {
+    Hands *hands = parse_hands(filename, jokers);
 
-    hands_sort(hands);
+    hands_sort(hands, jokers);
 
     uint64_t result = 0;
     for(uint64_t i = 0; i < hands->len; i++) {
@@ -214,6 +236,10 @@ uint64_t solve_part_1(const char *filename) {
     return result;
 }
 
+uint64_t solve_part_2(char *filename) {
+    return solve_part_1(filename, true);
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
@@ -221,7 +247,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
-        uint64_t result = solve_part_1("input.txt");
+        /*uint64_t result = solve_part_1("input.txt", false);*/
+        uint64_t result = solve_part_2("input.txt");
         printf("%lu\n", result);
 
 	exit(EXIT_SUCCESS);
