@@ -10,7 +10,6 @@
 Network *network_init() {
     Network *n = malloc(sizeof(Network));
     n->instructions = NULL;
-    n->starting_node = NULL;
 
     return n;
 }
@@ -111,11 +110,6 @@ Network *network_parse(const char *filename) {
             nb_nodes++;
             nodes = realloc(nodes, sizeof(Node*) * nb_nodes);
             nodes[nb_nodes - 1] = new_node;
-
-            if(strcmp(new_node->label, "AAA") == 0) {
-                n->starting_node = new_node;
-            }
-
         }
 
         i++;
@@ -145,9 +139,21 @@ Network *network_parse(const char *filename) {
     return n;
 }
 
+Node *starting_node_pt1(Network *n) {
+    for(int i = 0; i < n->len; i++) {
+        Node *node = n->nodes[i];
+        if(strcmp(node->label, "AAA") == 0) {
+            return node;
+        }
+    }
+
+    printf("No starting node\n");
+    exit(1);
+}
+
 uint64_t solve_part_1(char *filename) {
     Network *n = network_parse(filename);
-    Node *cur_node = n->starting_node;
+    Node *cur_node = starting_node_pt1(n);
     int nb = 0;
     while(strcmp(cur_node->label, "ZZZ") != 0) {
         char inst = n->instructions[nb % strlen(n->instructions)];
@@ -160,17 +166,81 @@ uint64_t solve_part_1(char *filename) {
     return nb;
 }
 
-int main(int argc, char *argv[]) {
+Node **starting_nodes_pt2(Network *n, size_t *nb_sn) {
+    Node **starting_nodes = NULL;
+    *nb_sn = 0;
+    for(int i = 0; i < n->len; i++) {
+        Node *node = n->nodes[i];
+        char *label = node->label;
+        if(label[2] == 'A') {
+            *nb_sn = *nb_sn + 1;
+            starting_nodes = realloc(starting_nodes, sizeof(Node*) * (*nb_sn));
+            starting_nodes[*nb_sn - 1] = node;
+        }
+    }
 
+    return starting_nodes;
+}
+
+uint64_t solve_part_2(char *filename) {
+    Network *n = network_parse(filename);
+    size_t nb_sn = 0;
+    Node **starting_nodes = starting_nodes_pt2(n, &nb_sn);
+
+    uint64_t *m_arr = NULL;
+    size_t m_len = 0;
+
+    for(int i = 0; i < nb_sn; i++) {
+        Node *cur_node = starting_nodes[i];
+        int nb = 0;
+        while(cur_node->label[2] != 'Z') {
+            char inst = n->instructions[nb % strlen(n->instructions)];
+            cur_node = inst == 'L' ? cur_node->left : cur_node->right;
+            nb++;
+        }
+
+        m_len++;
+        m_arr = realloc(m_arr, sizeof(uint64_t) * m_len);
+        m_arr[m_len - 1] = nb;
+    }
+
+    uint64_t l = lcm(m_arr, m_len);
+
+    network_free(n);
+    free(m_arr);
+    free(starting_nodes);
+
+    return l;
+}
+
+// https://stackoverflow.com/questions/19738919/gcd-function-for-c
+uint64_t gcd(uint64_t a, uint64_t b) {
+    int remainder = a % b;
+    if (remainder == 0) {
+        return b;
+    }
+
+    return gcd(b, remainder);
+}
+
+// https://www.geeksforgeeks.org/lcm-of-given-array-elements/
+uint64_t lcm(uint64_t *m, size_t m_len) {
+    uint64_t ans = m[0];
+    for(int i = 1; i < m_len; i++) {
+        ans = (m[i] * ans) / gcd(m[i], ans);
+    }
+
+    return ans;
+}
+
+int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     if (strcmp(argv[1], "exec") == 0) {
-
-        uint64_t result = solve_part_1("input.txt");
-
+        uint64_t result = solve_part_2("input.txt");
         printf("%lu\n", result);
 
 	exit(EXIT_SUCCESS);
