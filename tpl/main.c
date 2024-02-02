@@ -7,20 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main(int argc, char *argv[]) {
-    if (argc <= 1) {
-        fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (strcmp(argv[1], "exec") == 0) {
+Network *parse_whatever(const char *filename) {
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
 	ssize_t read;
         long int result = 0;
 
-	fp = fopen("input.txt", "r");
+	fp = fopen(filename, "r");
 	if (fp == NULL)
 	    exit(EXIT_FAILURE);
 
@@ -34,6 +28,15 @@ int main(int argc, char *argv[]) {
 	    free(line);
 
         /*printf("Final result: %ld\n", result);*/
+}
+
+int main(int argc, char *argv[]) {
+    if (argc <= 1) {
+        fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(argv[1], "exec") == 0) {
 
 	exit(EXIT_SUCCESS);
     } else {
