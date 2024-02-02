@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include "lib/util.h"
 #include "main.h"
 #include "main_test.h"
 #include <ctype.h>
