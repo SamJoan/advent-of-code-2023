@@ -12,4 +12,5 @@ typedef struct {
 } Report;
 
 Report *parse_report(const char *filename);
+uint64_t solve_part1(char *filename);
 void report_free(Report *report);
