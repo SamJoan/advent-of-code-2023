@@ -17,14 +17,20 @@ MU_TEST(test_parse_history) {
 }
 
 MU_TEST(test_solve_part1) {
-    uint64_t result = solve_part1("input_test.txt");
+    int64_t result = solve_part1("input_test.txt");
     mu_check(result == 114);
+}
+
+MU_TEST(test_solve_part2) {
+    int64_t result = solve_part2("input_test.txt");
+    mu_check(result == 2);
 }
 
 
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_parse_history);*/
-    MU_RUN_TEST(test_solve_part1);
+    /*MU_RUN_TEST(test_solve_part1);*/
+    MU_RUN_TEST(test_solve_part2);
 }
 
 int run_tests() {

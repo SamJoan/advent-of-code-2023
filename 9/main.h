@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 typedef struct {
-    uint64_t *val;
+    int64_t *val;
     size_t len;
 } History;
 
@@ -12,5 +12,6 @@ typedef struct {
 } Report;
 
 Report *parse_report(const char *filename);
-uint64_t solve_part1(char *filename);
+int64_t solve_part1(char *filename);
+int64_t solve_part2(char *filename);
 void report_free(Report *report);
