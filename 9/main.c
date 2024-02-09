@@ -181,9 +181,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
-        /*int64_t result = solve_part1("input.txt");*/
-        int64_t result = solve_part2("input.txt");
-        printf("%lu\n", result);
+        int64_t result = solve_part1("input.txt");
+        printf("Part 1: %lu\n", result);
+        result = solve_part2("input.txt");
+        printf("Part 2: %lu\n", result);
 
 	exit(EXIT_SUCCESS);
     } else {
