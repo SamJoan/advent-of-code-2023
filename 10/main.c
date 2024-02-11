@@ -302,16 +302,7 @@ enum Dir opposite(enum Dir dir) {
     }
 }
 
-uint64_t solve_part_1(char *filename) {
-    Map *map = map_parse(filename);
-    int start_x = 0;
-    int start_y = 0;
-    char start_c = '\0';
-    determine_start(map, &start_x, &start_y, &start_c);
-
-    Directions start_dirs = {DIR_UNSET, DIR_UNSET};
-    char_dirs(&start_dirs, start_c);
-
+void map_navigate(int *steps_out, Coords **coords, Map *map, int start_x, int start_y, char start_c, Directions start_dirs) {
     int steps = 0;
     int cur_x = start_x;
     int cur_y = start_y;
@@ -333,9 +324,52 @@ uint64_t solve_part_1(char *filename) {
         cur_dir = next_dir;
     }
 
+    *steps_out = steps;
+}
+
+uint64_t solve_part_1(char *filename) {
+    Map *map = map_parse(filename);
+    int start_x = 0;
+    int start_y = 0;
+    char start_c = '\0';
+    determine_start(map, &start_x, &start_y, &start_c);
+
+    Directions start_dirs = {DIR_UNSET, DIR_UNSET};
+    char_dirs(&start_dirs, start_c);
+
+    int steps = 0;
+    Coords *coords = NULL;
+    map_navigate(&steps, &coords, map, start_x, start_y, start_c, start_dirs);
+
     map_free(map);
 
     return steps / 2;
+}
+
+uint64_t solve_part_2(char *filename) {
+    // parse map
+    // Get coords for circuit
+    // eliminate non-circuit pipes
+    // ray-trace
+    // profit.
+
+    Map *map = map_parse(filename);
+    int start_x = 0;
+    int start_y = 0;
+    char start_c = '\0';
+    determine_start(map, &start_x, &start_y, &start_c);
+
+    Directions start_dirs = {DIR_UNSET, DIR_UNSET};
+    char_dirs(&start_dirs, start_c);
+
+    int steps = 0;
+    Coords *coords = NULL;
+    map_navigate(&steps, &coords, map, start_x, start_y, start_c, start_dirs);
+
+    map_free(map);
+
+    return steps / 2;
+
 }
 
 int main(int argc, char *argv[]) {

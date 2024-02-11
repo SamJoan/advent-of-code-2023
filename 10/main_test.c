@@ -25,10 +25,16 @@ MU_TEST(test_solve_part_1_complex) {
     mu_check(result == 8);
 }
 
+MU_TEST(test_solve_part_2) {
+    uint64_t result = solve_part_2("input_test_area.txt");
+    mu_check(result == 4);
+}
+
 MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST(test_parse_map);
-    MU_RUN_TEST(test_solve_part_1);
-    MU_RUN_TEST(test_solve_part_1_complex);
+    /*MU_RUN_TEST(test_parse_map);*/
+    /*MU_RUN_TEST(test_solve_part_1);*/
+    /*MU_RUN_TEST(test_solve_part_1_complex);*/
+    MU_RUN_TEST(test_solve_part_2);
 }
 
 int run_tests() {

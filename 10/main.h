@@ -13,7 +13,18 @@ typedef struct {
     enum Dir b;
 } Directions;
 
+typedef struct {
+    int x;
+    int y;
+} Coord;
+
+typedef struct {
+    Coord ** data;
+    size_t len;
+} Coords;
+
 
 Map *map_parse(const char *filename);
 uint64_t solve_part_1(char *filename);
+uint64_t solve_part_2(char *filename);
 void map_free(Map *map);
