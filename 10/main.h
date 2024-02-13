@@ -23,7 +23,6 @@ typedef struct {
     size_t len;
 } Coords;
 
-
 Map *map_parse(const char *filename);
 uint64_t solve_part_1(char *filename);
 uint64_t solve_part_2(char *filename);

@@ -302,13 +302,50 @@ enum Dir opposite(enum Dir dir) {
     }
 }
 
-void map_navigate(int *steps_out, Coords **coords, Map *map, int start_x, int start_y, char start_c, Directions start_dirs) {
+Coords *coords_init() {
+    Coords *coords = malloc(sizeof(Coords));
+    coords->data = NULL;
+    coords->len = 0;
+    
+    return coords;
+}
+
+void coords_free(Coords *coords) {
+    for(int i = 0; i < coords->len; i++) {
+        free(coords->data[i]);
+    }
+    free(coords->data);
+    free(coords);
+}
+
+
+void coords_add(Coords *coords, Coord *coord) {
+    coords->len++;
+    coords->data = realloc(coords->data, coords->len * sizeof(Coord*));
+    coords->data[coords->len - 1] = coord;
+}
+
+Coord *coord_init(int x, int y) {
+    Coord *coord = malloc(sizeof(Coord));
+    coord->x = x;
+    coord->y = y;
+    
+    return coord;
+}
+
+void map_navigate(int *steps_out, Coords **coords_out, Map *map, int start_x, int start_y, char start_c, Directions start_dirs) {
     int steps = 0;
     int cur_x = start_x;
     int cur_y = start_y;
     int cur_c = start_c;
+
+    Coords *coords = coords_init();
     enum Dir cur_dir = start_dirs.a;
     while(steps == 0 || !(cur_x == start_x && cur_y == start_y)) {
+
+        Coord *coord = coord_init(cur_x, cur_y);
+        coords_add(coords, coord);
+
         Directions next_dirs = {DIR_UNSET, DIR_UNSET};
         char_dirs(&next_dirs, cur_c);
 
@@ -324,7 +361,11 @@ void map_navigate(int *steps_out, Coords **coords, Map *map, int start_x, int st
         cur_dir = next_dir;
     }
 
+    Coord *coord = coord_init(cur_x, cur_y);
+    coords_add(coords, coord);
+
     *steps_out = steps;
+    *coords_out = coords;
 }
 
 uint64_t solve_part_1(char *filename) {
@@ -342,17 +383,63 @@ uint64_t solve_part_1(char *filename) {
     map_navigate(&steps, &coords, map, start_x, start_y, start_c, start_dirs);
 
     map_free(map);
+    coords_free(coords);
 
     return steps / 2;
 }
 
-uint64_t solve_part_2(char *filename) {
-    // parse map
-    // Get coords for circuit
-    // eliminate non-circuit pipes
-    // ray-trace
-    // profit.
+void map_simplify(Map *map, Map **simplified_map, Coords *coords) {
+    Map *new_map = map_init();
+    size_t x_len = strlen(map->data[0]) + 1;
+    for(int y = 0; y < map->len; y++) {
+        new_map->len++; 
+        new_map->data = realloc(new_map->data, new_map->len * sizeof(char*));
+        new_map->data[y] = malloc(x_len);
+        new_map->data[y][x_len - 1] = '\0';
+        for(int x = 0; x < x_len - 1; x++) {
+            new_map->data[y][x] = ' ';
+        }
+    }
 
+    for(int i = 0; i < coords->len; i++) {
+        Coord *coord = coords->data[i];
+        char c = map->data[coord->y][coord->x];
+        if(c == 'S') {
+            new_map->data[coord->y][coord->x] = determine_start_c(map, coord->x, coord->y);
+        } else {
+            new_map->data[coord->y][coord->x] = c;
+        }
+    }
+
+    /*for(int i = 0; i < map->len; i++) {*/
+        /*printf("'%s' %zu aa\n", map->data[i], strlen(map->data[i]));*/
+    /*}*/
+
+    *simplified_map = new_map;
+}
+
+void map_calculate_enclosed(const Map *map, uint64_t *enclosed_out) {
+    uint64_t enclosed = 0;
+    for(int y = 0; y < map->len; y++) {
+        bool inside = false;
+        for(int x = 0; x < strlen(map->data[y]); x++) {
+            char c = map->data[y][x];
+            if(c != ' ') {
+                Directions dirs = {DIR_UNSET, DIR_UNSET};
+                char_dirs(&dirs, c);
+                if(dirs.a == DIR_UP || dirs.b == DIR_UP) {
+                    inside = !inside;
+                }
+            } else if(inside) {
+                enclosed++;
+            }
+        }
+    }
+
+    *enclosed_out = enclosed;
+}
+
+uint64_t solve_part_2(char *filename) {
     Map *map = map_parse(filename);
     int start_x = 0;
     int start_y = 0;
@@ -362,14 +449,20 @@ uint64_t solve_part_2(char *filename) {
     Directions start_dirs = {DIR_UNSET, DIR_UNSET};
     char_dirs(&start_dirs, start_c);
 
-    int steps = 0;
+    int perimeter_steps = 0;
     Coords *coords = NULL;
-    map_navigate(&steps, &coords, map, start_x, start_y, start_c, start_dirs);
+    map_navigate(&perimeter_steps, &coords, map, start_x, start_y, start_c, start_dirs);
+    Map *simplified_map = NULL;
+    map_simplify(map, &simplified_map, coords);
+
+    uint64_t enclosed_tiles = 0;
+    map_calculate_enclosed(simplified_map, &enclosed_tiles);
 
     map_free(map);
+    map_free(simplified_map);
+    coords_free(coords);
 
-    return steps / 2;
-
+    return enclosed_tiles;
 }
 
 int main(int argc, char *argv[]) {
@@ -380,7 +473,9 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "exec") == 0) {
         uint64_t result = solve_part_1("input.txt");
-        printf("%lu\n", result);
+        printf("Part 1: %lu\n", result);
+        result = solve_part_2("input.txt");
+        printf("Part 2: %lu\n", result);
 
         exit(EXIT_SUCCESS);
     } else {

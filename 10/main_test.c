@@ -31,9 +31,9 @@ MU_TEST(test_solve_part_2) {
 }
 
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_parse_map);*/
-    /*MU_RUN_TEST(test_solve_part_1);*/
-    /*MU_RUN_TEST(test_solve_part_1_complex);*/
+    MU_RUN_TEST(test_parse_map);
+    MU_RUN_TEST(test_solve_part_1);
+    MU_RUN_TEST(test_solve_part_1_complex);
     MU_RUN_TEST(test_solve_part_2);
 }
 
