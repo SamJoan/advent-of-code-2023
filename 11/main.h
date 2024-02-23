@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 typedef struct {
-    char * data;
+    char** data;
     size_t len;
 } Galaxy;
 

@@ -6,6 +6,7 @@
 
 MU_TEST(test_parse_galaxy) {
     Galaxy *galaxy = parse_galaxy("input_test.txt");
+    mu_check(galaxy->len == 10);
 }
 
 MU_TEST_SUITE(test_suite) {
