@@ -28,3 +28,22 @@ size_t parse_ints(char *numbers_in, uint64_t **numbers_ptr) {
     return i;
 }
 
+void *smalloc(size_t size) {
+    void *p = malloc(size);
+    if(!p) {
+        printf("Failed to allocate memory\n");
+        exit(1);
+    }
+
+    return p;
+}
+
+void *srealloc(void *ptr, size_t size) {
+    void *p = realloc(ptr, size);
+    if(!p) {
+        printf("Failed to allocate memory\n");
+        exit(1);
+    }
+
+    return p;
+}
