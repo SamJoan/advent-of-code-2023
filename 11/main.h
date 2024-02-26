@@ -39,3 +39,4 @@ uint64_t solve_part_1(char *filename);
 void coord_pairs_add(CoordPairs *cp, Coord *coord_a, Coord *coord_b);
 void coord_pairs_free(CoordPairs *pairs);
 void galaxy_free(Galaxy *galaxy);
+uint64_t solve_part_2(char *filename, int years);

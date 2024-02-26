@@ -72,7 +72,8 @@ void galaxy_duplicate_col(Galaxy *galaxy, int dup_x) {
     }
 }
 
-Galaxy *galaxy_expand(Galaxy *galaxy) {
+Galaxy *galaxy_expand(Galaxy *galaxy, int years) {
+    years--;
     Galaxy *expanded = galaxy_init();
     for(int y = 0; y < galaxy->len; y++) {
         char *line = galaxy->data[y];
@@ -85,7 +86,9 @@ Galaxy *galaxy_expand(Galaxy *galaxy) {
         }
 
         if(all_empty) {
-            galaxy_add_line(expanded, line);
+            for(int i = 0; i < years; i++) {
+                galaxy_add_line(expanded, line);
+            }
         }
 
         galaxy_add_line(expanded, line);
@@ -102,8 +105,10 @@ Galaxy *galaxy_expand(Galaxy *galaxy) {
         }
 
         if(all_empty) {
-            galaxy_duplicate_col(expanded, x + duplicated);
-            duplicated++;
+            for(int i = 0; i < years; i++) {
+                galaxy_duplicate_col(expanded, x + duplicated);
+                duplicated++;
+            }
         }
     }
 
@@ -274,7 +279,7 @@ uint64_t distances_calculate(Coords *coords) {
 
 uint64_t solve_part_1(char *filename) {
     Galaxy *galaxy = galaxy_parse(filename);
-    Galaxy *expanded = galaxy_expand(galaxy); 
+    Galaxy *expanded = galaxy_expand(galaxy, 2); 
     Coords *coords = coords_get(expanded);
     
     uint64_t total_distance = distances_calculate(coords);
@@ -286,6 +291,30 @@ uint64_t solve_part_1(char *filename) {
     return total_distance;
 }
 
+uint64_t solve_part_2(char *filename, int years) {
+    Galaxy *galaxy = galaxy_parse(filename);
+    Galaxy *expanded = galaxy_expand(galaxy, 1); 
+    Coords *coords = coords_get(expanded);
+    uint64_t total_distance1 = distances_calculate(coords);
+
+    galaxy_free(expanded);
+    coords_free(coords);
+
+    expanded = galaxy_expand(galaxy, 2); 
+    coords = coords_get(expanded);
+    uint64_t total_distance2 = distances_calculate(coords);
+
+    /*printf("%lu %lu %lu\n", total_distance1, total_distance2, total_distance2 - total_distance1);*/
+    uint64_t delta = total_distance2 - total_distance1;
+    uint64_t result = total_distance1 + (delta * (years - 1));
+
+    galaxy_free(expanded);
+    coords_free(coords);
+    galaxy_free(galaxy);
+
+    return result;
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "Usage: %s (test) <file>\n", argv[0]);
@@ -295,6 +324,9 @@ int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "exec") == 0) {
         uint64_t result = solve_part_1("input.txt");
         printf("Part 1:\n%lu\n", result);
+
+        uint64_t result2 = solve_part_2("input.txt", 1000000);
+        printf("Part 2:\n%lu\n", result2);
 
         exit(EXIT_SUCCESS);
     } else {

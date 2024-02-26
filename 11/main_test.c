@@ -51,10 +51,17 @@ MU_TEST(test_hashmap) {
     coord_pairs_free(cp);
 }
 
+MU_TEST(test_solve_part_2) {
+    uint64_t result = solve_part_2("input_test.txt", 100);
+
+    mu_check(result == 8410);
+}
+
 MU_TEST_SUITE(test_suite) {
     MU_RUN_TEST(test_parse_galaxy);
     MU_RUN_TEST(test_solve_part_1);
     MU_RUN_TEST(test_hashmap);
+    MU_RUN_TEST(test_solve_part_2);
 }
 
 int run_tests() {
