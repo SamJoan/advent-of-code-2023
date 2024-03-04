@@ -84,6 +84,39 @@ size_t dsglen(int *dsg) {
     return len;
 }
 
+uint64_t dsghash(int *dsg) {
+    int *cur = dsg;
+    size_t len = 0;
+    uint64_t hash = 1;
+    while(*cur != -1) {
+        hash = hash * (*cur);
+
+        len++;
+        cur++;
+    }
+
+    return hash;
+}
+
+bool dsgcmp(int *dsg_a, int *dsg_b) {
+    int *cur = dsg_a;
+    size_t index = 0;
+    while(*cur != -1) {
+        if(dsg_a[index] != dsg_b[index]) {
+            return false;
+        }
+
+        cur++;
+        index++;
+    }
+
+    if(dsg_b[index] != -1) {
+        return false;
+    }
+
+    return true;
+}
+
 ConditionRecords *parse_records(const char *filename, bool unfold) {
 	FILE * fp;
 	char * line = NULL;
@@ -213,6 +246,35 @@ uint64_t solve_part_2(char *filename) {
 
     cr_free(cr);
     return result;
+}
+
+
+uint64_t function_call_hash(void *function_call_in) {
+    FunctionCall *f = function_call_in;
+
+    uint64_t hash = hash_char(f->springs);
+    hash += dsghash(f->dsg);
+    hash = hash * (f->group_size + 1);
+
+    return hash;
+}
+
+bool function_call_cmp(void *func_a_in, void *func_b_in) {
+    FunctionCall *func_a = func_a_in;
+    FunctionCall *func_b = func_b_in;
+
+    return strcmp(func_a->springs, func_b->springs) == 0 &&
+        dsgcmp(func_a->dsg, func_b->dsg) &&
+        func_a->group_size == func_b->group_size;
+}
+
+FunctionCall *function_call_init(char *springs, int *dsg, int group_size) {
+    FunctionCall *f = smalloc(sizeof(FunctionCall));
+    f->springs = springs;
+    f->dsg = dsg;
+    f->group_size = group_size;
+
+    return f;
 }
 
 int main(int argc, char *argv[]) {

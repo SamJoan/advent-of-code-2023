@@ -1,8 +1,9 @@
+#include "lib/util.h"
+#include "main.h"
+#include "minunit.h"
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include "minunit.h"
-#include "main.h"
 
 MU_TEST(test_parse_records) {
     ConditionRecords *records = parse_records("input_test.txt", false);
@@ -63,11 +64,28 @@ MU_TEST(test_solve_part_2) {
     mu_check(result == 525152);
 }
 
+MU_TEST(test_hashmap) {
+    char *springs = "????.#...#...";
+    int dsg[] = { 4, 1, 1, -1 };
+
+    FunctionCall *f1 = function_call_init(springs, dsg, 0);
+    FunctionCall *f2 = function_call_init(springs, dsg, 1);
+
+    HashMap *h = hashmap_init(1000000, function_call_hash, function_call_cmp);
+    hashmap_add(h, f1);
+
+    mu_check(hashmap_in(h, f1) == true);
+    mu_check(hashmap_in(h, f2) == false);
+
+    // Ooh biscuits forgot to add the value! XD
+}
+
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_parse_records);*/
     /*MU_RUN_TEST(test_parse_records_unfold);*/
     /*MU_RUN_TEST(test_solve_part_1);*/
-    MU_RUN_TEST(test_solve_part_2);
+    /*MU_RUN_TEST(test_solve_part_2);*/
+    MU_RUN_TEST(test_hashmap);
 }
 
 int run_tests() {
