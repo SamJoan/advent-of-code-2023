@@ -67,24 +67,30 @@ MU_TEST(test_solve_part_2) {
 MU_TEST(test_hashmap) {
     char *springs = "????.#...#...";
     int dsg[] = { 4, 1, 1, -1 };
+    int *val = malloc(sizeof(uint64_t));
+    *val = 1337;
 
     FunctionCall *f1 = function_call_init(springs, dsg, 0);
     FunctionCall *f2 = function_call_init(springs, dsg, 1);
 
     HashMap *h = hashmap_init(1000000, function_call_hash, function_call_cmp);
-    hashmap_add(h, f1);
+    hashmap_put(h, f1, val);
 
     mu_check(hashmap_in(h, f1) == true);
     mu_check(hashmap_in(h, f2) == false);
+    mu_check(hashmap_get(h, f1) == val);
+    mu_check(hashmap_get(h, f2) == NULL);
 
-    // Ooh biscuits forgot to add the value! XD
+    function_call_free(f2);
+    hashmap_free(h);
 }
 
+
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_parse_records);*/
-    /*MU_RUN_TEST(test_parse_records_unfold);*/
-    /*MU_RUN_TEST(test_solve_part_1);*/
-    /*MU_RUN_TEST(test_solve_part_2);*/
+    MU_RUN_TEST(test_parse_records);
+    MU_RUN_TEST(test_parse_records_unfold);
+    MU_RUN_TEST(test_solve_part_1);
+    MU_RUN_TEST(test_solve_part_2);
     MU_RUN_TEST(test_hashmap);
 }
 

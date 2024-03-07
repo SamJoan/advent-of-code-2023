@@ -3,16 +3,22 @@
 #include <stdbool.h>
 
 typedef struct {
-    void **data;
-    size_t len;
+    void *key;
+    void *value;
+} KeyValue;
+
+typedef struct {
+    KeyValue **data;
+    size_t max_size;
     uint64_t (*hash_func)(void *);
     bool (*eq_func)(void *, void *);
 } HashMap;
 
-HashMap *hashmap_init(size_t nb_elems, uint64_t (*hash_func)(void *), bool (*eq_func)(void *, void *));
-bool hashmap_in(HashMap *h, void *elem);
+HashMap *hashmap_init(size_t max_size, uint64_t (*hash_func)(void *), bool (*eq_func)(void *, void *));
 uint64_t hash_char(const char* key);
-void hashmap_add(HashMap *h, void *elem);
+bool hashmap_in(HashMap *h, void *key);
+void* hashmap_get(HashMap *h, void *key);
+void hashmap_put(HashMap *h, void *key, void *value);
 void hashmap_free(HashMap *h);
 
 uint64_t hash_char(const char* key);

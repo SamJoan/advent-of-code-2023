@@ -183,14 +183,47 @@ ConditionRecords *parse_records(const char *filename, bool unfold) {
         return records;
 }
 
-uint64_t valid_possibilities(char *springs, int *dsg, int group_size) {
+bool cache_get(HashMap *cache, char *springs, int *dsg, int group_size, uint64_t *cached_result) {
+    FunctionCall *f = function_call_init(springs, dsg, group_size);
+    uint64_t *c = hashmap_get(cache, f);
+
+    function_call_free(f);
+
+    if(c != NULL) {
+        *cached_result = *c;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void cache_put(HashMap *cache, char *springs, int *dsg, int group_size, uint64_t result) {
+    FunctionCall *f = function_call_init(springs, dsg, group_size);
+
+    uint64_t *result_ptr = malloc(sizeof(uint64_t));
+    *result_ptr = result;
+
+    hashmap_put(cache, f, result_ptr);
+}
+
+uint64_t valid_possibilities(HashMap *cache, char *springs, int *dsg, int group_size) {
+    uint64_t cached_result = 0;
+    bool cached = cache_get(cache, springs, dsg, group_size, &cached_result);
+    if(cached) {
+        return cached_result;
+    }
+
     size_t springs_len = strlen(springs);
     size_t dsg_len = dsglen(dsg);
 
     if(springs_len == 0) {
         bool all_consumed = dsg_len == 0 && group_size == 0;
         bool can_consume_last = dsg_len == 1 && dsg[0] == group_size;
-        return all_consumed || can_consume_last ? 1 : 0;
+        uint64_t result = all_consumed || can_consume_last ? 1 : 0;
+
+        cache_put(cache, springs, dsg, group_size, result);
+
+        return result;
     }
 
     char symbols[3];
@@ -207,20 +240,21 @@ uint64_t valid_possibilities(char *springs, int *dsg, int group_size) {
     for(int i = 0; i < strlen(symbols); i++) {
         char s = symbols[i];
         if(s == '#') {
-            valid += valid_possibilities(springs+1, dsg, group_size+1); 
+            valid += valid_possibilities(cache, springs+1, dsg, group_size+1); 
         }
 
         if(s == '.') {
             if(group_size != 0) {
                 if(dsg_len > 0 && dsg[0] == group_size) {
-                    valid += valid_possibilities(springs+1, dsg + 1, 0);
+                    valid += valid_possibilities(cache, springs+1, dsg + 1, 0);
                 }
             } else {
-                valid += valid_possibilities(springs+1, dsg, 0);
+                valid += valid_possibilities(cache, springs+1, dsg, 0);
             }
         }
     }
 
+    cache_put(cache, springs, dsg, group_size, valid);
     return valid;
 }
 
@@ -228,8 +262,10 @@ uint64_t solve_part_1(char *filename) {
     ConditionRecords *cr = parse_records(filename, false);
     uint64_t result = 0;
     for(int i = 0; i < cr->len; i++) {
+        HashMap *cache = hashmap_init(50000, function_call_hash, function_call_cmp);
         Record *record = cr->data[i];
-        result += valid_possibilities(record->springs, record->dsg, 0);
+        result += valid_possibilities(cache, record->springs, record->dsg, 0);
+        hashmap_free(cache);
     }
 
     cr_free(cr);
@@ -240,14 +276,15 @@ uint64_t solve_part_2(char *filename) {
     ConditionRecords *cr = parse_records(filename, true);
     uint64_t result = 0;
     for(int i = 0; i < cr->len; i++) {
+        HashMap *cache = hashmap_init(50000, function_call_hash, function_call_cmp);
         Record *record = cr->data[i];
-        result += valid_possibilities(record->springs, record->dsg, 0);
+        result += valid_possibilities(cache, record->springs, record->dsg, 0);
+        hashmap_free(cache);
     }
 
     cr_free(cr);
     return result;
 }
-
 
 uint64_t function_call_hash(void *function_call_in) {
     FunctionCall *f = function_call_in;
@@ -275,6 +312,10 @@ FunctionCall *function_call_init(char *springs, int *dsg, int group_size) {
     f->group_size = group_size;
 
     return f;
+}
+
+void function_call_free(FunctionCall *f) {
+    free(f);
 }
 
 int main(int argc, char *argv[]) {
