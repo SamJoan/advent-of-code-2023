@@ -151,25 +151,25 @@ patterns = parse_patterns('input.txt')
 score = 0
 for nb_pattern, pattern in enumerate(patterns):
     found_smudge = False
-    print("PATT")
-    p(pattern)
-    print("FLIPADAPATT")
-    p(flip_pattern(pattern))
+    # print("PATT")
+    # p(pattern)
+    # print("FLIPADAPATT")
+    # p(flip_pattern(pattern))
     h_score, smudge_coords_list = identify_mirror_h(pattern)
-    print("h_score", h_score)
+    # print("h_score", h_score)
     if h_score == -1:
         smudge_pos = smudge_coords_list.pop(0)
         for smudge_coords in smudge_coords_list:
             found_smudge = True
             pattern = flip_tuple_coord(pattern, smudge_coords)
             h_score, smudge_coords = identify_mirror_h(pattern, smudge_pos=smudge_pos)
-            print("hscore %s %s" % (h_score, smudge_coords))
+            # print("hscore %s %s" % (h_score, smudge_coords))
             v_score = 0
             if h_score > 0:
                 break
     else:
         v_score, smudge_coords_list = identify_mirror_v(pattern)
-        print("v_score", v_score)
+        # print("v_score", v_score)
         if v_score == -1:
             smudge_pos = smudge_coords_list.pop(0)
             for smudge_coords in smudge_coords_list:
@@ -179,7 +179,7 @@ for nb_pattern, pattern in enumerate(patterns):
                 p(flip_pattern(pattern))
                 h_score = 0
                 v_score, smudge_coords = identify_mirror_v(pattern, smudge=smudge_pos)
-                print("v_score", v_score)
+                # print("v_score", v_score)
                 if v_score > 0:
                     break
 
