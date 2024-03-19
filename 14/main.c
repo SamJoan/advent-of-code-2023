@@ -164,21 +164,72 @@ uint64_t solve_part_1(char *filename) {
     return weight;
 }
 
-uint64_t solve_part_2(char *filename) {
-    Platform *p = parse_platform(filename);
-
+void full_cycle(Platform *p) {
     tilt_north(p);
     tilt_west(p);
     tilt_south(p);
     tilt_east(p);
+}
 
-    print_p(p);
-    exit(1);
+uint64_t solve_part_2(char *filename) {
+    Platform *p = parse_platform(filename);
 
-    uint64_t weight = calculate_weight(p);
+    int cycle = 0;
+    for(int i = 0; i < 150; i++) {
+        full_cycle(p);
+        cycle++;
+    }
+
+    int record_size = 100;
+    uint64_t record[record_size];
+    for(int i = 0; i < record_size; i++) {
+        full_cycle(p);
+        uint64_t weight = calculate_weight(p);
+        record[i] = weight;
+        cycle++;
+    }
+
+    int pattern_beginning_size = 50;
+    uint64_t pattern_beginning[pattern_beginning_size];
+    for(int i = 0; i < pattern_beginning_size; i++) {
+        pattern_beginning[i] = record[i];
+    }
+
+    int last_cycle_start = -1;
+    int cycle_len = -1;
+    for(int i = 0; i < record_size - pattern_beginning_size; i++) {
+        bool all_equal = true;
+        for(int j = 0; j < pattern_beginning_size; j++) {
+            if(pattern_beginning[j] != record[i + j]) {
+                all_equal = false;
+                break;
+            }
+        }
+
+        if(all_equal) {
+            if(last_cycle_start == -1) {
+                last_cycle_start = i;
+            } else {
+                cycle_len = i - last_cycle_start;
+                break;
+            }
+        }
+    }
+
+    uint64_t final_patt[cycle_len];
+    for(int i = 0; i < cycle_len; i++) {
+        full_cycle(p);
+        final_patt[i] = calculate_weight(p);
+        cycle++;
+    }
     
+    int desired_cycles = 1000000000;
+    int remaining_cycles = desired_cycles - cycle - 1;
+
+    uint64_t result = final_patt[remaining_cycles % cycle_len];
+
     platform_free(p);
-    return weight;
+    return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -189,8 +240,10 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "exec") == 0) {
         uint64_t result_1 = solve_part_1("input.txt");
-
         printf("Part 1:\n%lu\n", result_1);
+
+        uint64_t result_2 = solve_part_2("input.txt");
+        printf("Part 2:\n%lu\n", result_2);
 
 	exit(EXIT_SUCCESS);
     } else {
