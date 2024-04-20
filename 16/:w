@@ -1,0 +1,16 @@
+#include <stdint.h>
+#include <stdlib.h>
+
+typedef struct {
+    char **data;
+    size_t len;
+} Layout;
+
+typedef struct {
+    char **data;
+    size_t len;
+} Energised;
+
+Layout *layout_parse(const char *filename);
+void layout_free(Layout *l);
+uint64_t solve_part1(char *filename);
