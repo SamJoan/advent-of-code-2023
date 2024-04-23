@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -30,3 +31,4 @@ typedef struct {
 Layout *layout_parse(const char *filename);
 void layout_free(Layout *l);
 uint64_t solve_part1(char *filename);
+uint64_t solve_part2(char* filename);
