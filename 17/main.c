@@ -41,7 +41,7 @@ Map *map_parse(const char *filename) {
 	while ((read = getline(&line, &len, fp)) != -1) {
             map->len++;
             map->data = srealloc(map->data, map->len * sizeof(char*));
-            map->data[map->len-1] = strdup(line);
+            map->data[map->len-1] = strndup(line, strlen(line) - 1);
 	}
 
 	fclose(fp);
@@ -108,16 +108,20 @@ void pq_insert(PriorityQueue *pq, Elem *elem) {
 }
 
 Elem *pq_extract_min(PriorityQueue *pq) {
-    Elem *elem = pq->data[0];
+    if(pq->len > 0) {
+        Elem *elem = pq->data[0];
 
-    swap(&pq->data[0], &pq->data[pq->len - 1]);
-    pq->len--;
+        swap(&pq->data[0], &pq->data[pq->len - 1]);
+        pq->len--;
 
-    for(int i = pq->len / 2 - 1; i >= 0; i--) {
-        pq_heapify_min(pq, i);
+        for(int i = pq->len / 2 - 1; i >= 0; i--) {
+            pq_heapify_min(pq, i);
+        }
+
+        return elem;
+    } else {
+        return NULL;
     }
-
-    return elem;
 }
 
 void pq_free(PriorityQueue *pq) {
@@ -129,9 +133,136 @@ void pq_free(PriorityQueue *pq) {
     free(pq);
 }
 
-uint64_t solve_part1(char *filename) {
+VisitedDirections *vd_init() {
+    VisitedDirections *vd = smalloc(sizeof(VisitedDirections));
+
+    vd->data[VERTICAL] = false;
+    vd->data[HORIZONTAL] = false;
+
+    return vd;
+}
+
+AlreadyVisited *av_init(Map *l) {
+    AlreadyVisited *av = smalloc(sizeof(AlreadyVisited));
+    av->data = smalloc(sizeof(VisitedDirections**) * l->len);
+    av->len = l->len;
+    for(int y = 0; y < l->len; y++) {
+        av->data[y] = smalloc(sizeof(VisitedDirections*) * (strlen(l->data[y]) + 1));
+        size_t line_len = strlen(l->data[y]);
+        for(int x = 0; x < line_len; x++) {
+            VisitedDirections *vd = vd_init();
+            av->data[y][x] = vd;
+        }
+
+        av->data[y][line_len] = NULL;
+    }
+
+    return av;
+}
+
+void av_free(AlreadyVisited *av) {
+    for(int y = 0; y < av->len; y++) {
+        int x = 0;
+        VisitedDirections *next = NULL;
+        while(((next = av->data[y][x]) != NULL)) {
+            free(next);
+            x++;
+        }
+
+        free(av->data[y]);
+    }
+
+    free(av->data);
+    free(av);
+}
+
+uint64_t navigate(Map *map, int min_steps, int max_steps) {
     PriorityQueue *pq = pq_init();
-    return 0;
+    AlreadyVisited *av = av_init(map);
+
+    pq_insert(pq, elem_init(0, 0, 0, HORIZONTAL));
+    pq_insert(pq, elem_init(0, 0, 0, VERTICAL));
+
+    int max_x = strlen(map->data[0]) - 1;
+    int max_y = map->len - 1;
+
+    int max_cost = -1;
+    while(true) {
+        Elem *elem = pq_extract_min(pq);
+        int x = elem->x;
+        int y = elem->y;
+        enum Direction dir = elem->dir;
+
+        /*printf("x: %d, y: %d. cost: %d\n", x, y, elem->priority);*/
+
+        if(x == max_x && y == max_y) {
+            /*printf("qwfqwfq %d, max_x %d, max_y %d\n", elem->priority, max_x, max_y);*/
+            max_cost = elem->priority;
+            free(elem);
+            break;
+        }
+        
+        if(av->data[y][x]->data[dir]) {
+            free(elem);
+            continue;
+        } else {
+            av->data[y][x]->data[dir] = true;
+        }
+
+        int original_cost = elem->priority;
+        int signs[] = {1, -1};
+        for(int s = 0; s < 2; s++) {
+            int sign = signs[s];
+
+            int cost = original_cost;
+            int new_x = x;
+            int new_y = y;
+
+            for(int i = min_steps; i <= max_steps; i++) {
+                if(dir == HORIZONTAL) {
+                    new_x = x + (i * sign);
+                } else if(dir == VERTICAL) {
+                    new_y = y + (i * sign);
+                }
+
+                if((new_x < 0 || new_x > max_x) ||
+                        new_y < 0 || new_y > max_y) {
+                    break;
+                }
+
+                cost += map->data[new_y][new_x] - '0';
+                enum Direction new_dir = dir == HORIZONTAL ? VERTICAL : HORIZONTAL;
+
+                if(!av->data[new_y][new_x]->data[new_dir]) {
+                    /*printf("Proposing new xy %d %d (cost %d)\n", new_x, new_y, cost);*/
+
+                    pq_insert(pq, elem_init(cost, new_x, new_y, new_dir));
+                }
+            }
+
+        }
+
+        free(elem); 
+    }
+    
+    pq_free(pq);
+    av_free(av);
+
+    return max_cost;
+}
+
+uint64_t solve_part1(char *filename) {
+    Map *map = map_parse(filename);
+    uint64_t result = navigate(map, 1, 3);
+    map_free(map);
+    return result;
+}
+
+uint64_t solve_part2(char *filename) {
+    Map *map = map_parse(filename);
+    uint64_t result = navigate(map, 4, 10);
+    map_free(map);
+    return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -141,6 +272,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
+        uint64_t result_1 = solve_part1("input.txt");
+        printf("Part 1:\n%lu\n", result_1);
+
+        uint64_t result_2 = solve_part2("input.txt");
+        printf("Part 2:\n%lu\n", result_2);
 
 	exit(EXIT_SUCCESS);
     } else {

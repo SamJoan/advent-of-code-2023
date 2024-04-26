@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 enum Direction {
     HORIZONTAL,
@@ -21,7 +22,17 @@ typedef struct {
 typedef struct {
     Elem **data;
     size_t len;
+    bool dirty;
 } PriorityQueue;
+
+typedef struct {
+    bool data[2];
+} VisitedDirections;
+
+typedef struct {
+    VisitedDirections ***data;
+    size_t len;
+} AlreadyVisited;
 
 Map *map_parse(const char *filename);
 void map_free(Map *map);

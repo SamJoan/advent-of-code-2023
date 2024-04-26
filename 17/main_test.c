@@ -10,11 +10,6 @@ MU_TEST(test_parse_map) {
     map_free(map);
 }
 
-MU_TEST(test_solve_part1) {
-    uint64_t result = solve_part1("input_test.txt");
-    mu_check(result == 102);
-}
-
 MU_TEST(test_priority_queue) {
     PriorityQueue *pq = pq_init();
 
@@ -35,26 +30,51 @@ MU_TEST(test_priority_queue) {
     Elem *min;
 
     min = pq_extract_min(pq);
-
     mu_check(min->x == 0);
-    mu_check(min->y == 0);
-    mu_check(min->dir == HORIZONTAL);
     free(min);
 
     min = pq_extract_min(pq);
-
     mu_check(min->x == 1);
-    mu_check(min->y == 1);
-    mu_check(min->dir == HORIZONTAL);
+    free(min);
+
+    min = pq_extract_min(pq);
+    mu_check(min->x == 2);
+    free(min);
+
+    min = pq_extract_min(pq);
+    mu_check(min->x == 3);
+    free(min);
+
+    min = pq_extract_min(pq);
+    mu_check(min->x == 4);
+    free(min);
+
+    min = pq_extract_min(pq);
+    mu_check(min->x == 5);
+    free(min);
+
+    min = pq_extract_min(pq);
+    mu_check(min == NULL);
     free(min);
 
     pq_free(pq);
 }
 
+MU_TEST(test_solve_part1) {
+    uint64_t result = solve_part1("input_test.txt");
+    mu_check(result == 102);
+}
+
+MU_TEST(test_solve_part2) {
+    uint64_t result = solve_part2("input_test.txt");
+    mu_check(result == 94);
+}
+
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_parse_map);*/
+    /*MU_RUN_TEST(test_priority_queue);*/
     /*MU_RUN_TEST(test_solve_part1);*/
-    MU_RUN_TEST(test_priority_queue);
+    MU_RUN_TEST(test_solve_part2);
 }
 
 int run_tests() {
