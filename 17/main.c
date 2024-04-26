@@ -193,7 +193,7 @@ uint64_t navigate(Map *map, int min_steps, int max_steps) {
         int y = elem->y;
         enum Direction dir = elem->dir;
 
-        /*printf("x: %d, y: %d. cost: %d\n", x, y, elem->priority);*/
+	/*printf("x: %d, y: %d. cost: %d\n", x, y, elem->priority);*/
 
         if(x == max_x && y == max_y) {
             /*printf("qwfqwfq %d, max_x %d, max_y %d\n", elem->priority, max_x, max_y);*/
@@ -218,7 +218,7 @@ uint64_t navigate(Map *map, int min_steps, int max_steps) {
             int new_x = x;
             int new_y = y;
 
-            for(int i = min_steps; i <= max_steps; i++) {
+            for(int i = 1; i <= max_steps; i++) {
                 if(dir == HORIZONTAL) {
                     new_x = x + (i * sign);
                 } else if(dir == VERTICAL) {
@@ -233,12 +233,14 @@ uint64_t navigate(Map *map, int min_steps, int max_steps) {
                 cost += map->data[new_y][new_x] - '0';
                 enum Direction new_dir = dir == HORIZONTAL ? VERTICAL : HORIZONTAL;
 
-                if(!av->data[new_y][new_x]->data[new_dir]) {
-                    /*printf("Proposing new xy %d %d (cost %d)\n", new_x, new_y, cost);*/
+                if(!av->data[new_y][new_x]->data[new_dir] && i >= min_steps) {
+		    /*printf("Proposing new xy %d %d (cost %d)\n", new_x, new_y, cost);*/
 
                     pq_insert(pq, elem_init(cost, new_x, new_y, new_dir));
                 }
             }
+
+            /*getchar();*/
 
         }
 
