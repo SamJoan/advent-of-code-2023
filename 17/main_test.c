@@ -71,9 +71,9 @@ MU_TEST(test_solve_part2) {
 }
 
 MU_TEST_SUITE(test_suite) {
-    /*MU_RUN_TEST(test_parse_map);*/
-    /*MU_RUN_TEST(test_priority_queue);*/
-    /*MU_RUN_TEST(test_solve_part1);*/
+    MU_RUN_TEST(test_parse_map);
+    MU_RUN_TEST(test_priority_queue);
+    MU_RUN_TEST(test_solve_part1);
     MU_RUN_TEST(test_solve_part2);
 }
 

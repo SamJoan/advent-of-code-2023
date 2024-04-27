@@ -55,6 +55,7 @@ PriorityQueue *pq_init() {
     PriorityQueue *pq = smalloc(sizeof(PriorityQueue));
     pq->data = NULL;
     pq->len = 0;
+    pq->dirty = true;
 
     return pq;
 }
@@ -98,25 +99,33 @@ void pq_heapify_min(PriorityQueue *pq, int i) {
 }
 
 void pq_insert(PriorityQueue *pq, Elem *elem) {
+
+    if(pq->len % 10000 == 0) {
+        pq->data = srealloc(pq->data, (pq->len + 10000) * sizeof(Elem*));
+    }
+
     pq->len++;
-    pq->data = srealloc(pq->data, pq->len * sizeof(Elem*));
     pq->data[pq->len - 1] = elem;
 
-    for(int i = pq->len / 2 - 1; i >= 0; i--) {
-        pq_heapify_min(pq, i);
-    }
+    pq->dirty = true;
 }
 
 Elem *pq_extract_min(PriorityQueue *pq) {
     if(pq->len > 0) {
+        if(pq->dirty) {
+            for(int i = pq->len / 2 - 1; i >= 0; i--) {
+                pq_heapify_min(pq, i);
+            }
+
+            pq->dirty = false;
+        }
+
         Elem *elem = pq->data[0];
 
         swap(&pq->data[0], &pq->data[pq->len - 1]);
         pq->len--;
 
-        for(int i = pq->len / 2 - 1; i >= 0; i--) {
-            pq_heapify_min(pq, i);
-        }
+        pq_heapify_min(pq, 0);
 
         return elem;
     } else {
@@ -176,10 +185,7 @@ void av_free(AlreadyVisited *av) {
     free(av);
 }
 
-uint64_t navigate(Map *map, int min_steps, int max_steps) {
-    PriorityQueue *pq = pq_init();
-    AlreadyVisited *av = av_init(map);
-
+uint64_t navigate(PriorityQueue *pq, AlreadyVisited *av, Map *map, int min_steps, int max_steps) {
     pq_insert(pq, elem_init(0, 0, 0, HORIZONTAL));
     pq_insert(pq, elem_init(0, 0, 0, VERTICAL));
 
@@ -193,13 +199,10 @@ uint64_t navigate(Map *map, int min_steps, int max_steps) {
         int y = elem->y;
         enum Direction dir = elem->dir;
 
-	/*printf("x: %d, y: %d. cost: %d\n", x, y, elem->priority);*/
-
         if(x == max_x && y == max_y) {
-            /*printf("qwfqwfq %d, max_x %d, max_y %d\n", elem->priority, max_x, max_y);*/
             max_cost = elem->priority;
             free(elem);
-            break;
+            return max_cost;
         }
         
         if(av->data[y][x]->data[dir]) {
@@ -234,36 +237,41 @@ uint64_t navigate(Map *map, int min_steps, int max_steps) {
                 enum Direction new_dir = dir == HORIZONTAL ? VERTICAL : HORIZONTAL;
 
                 if(!av->data[new_y][new_x]->data[new_dir] && i >= min_steps) {
-		    /*printf("Proposing new xy %d %d (cost %d)\n", new_x, new_y, cost);*/
-
                     pq_insert(pq, elem_init(cost, new_x, new_y, new_dir));
                 }
             }
-
-            /*getchar();*/
 
         }
 
         free(elem); 
     }
+}
+
+uint64_t solve_part1(char *filename) {
+    PriorityQueue *pq = pq_init();
+    Map *map = map_parse(filename);
+    AlreadyVisited *av = av_init(map);
+
+    uint64_t result = navigate(pq, av, map, 1, 3);
+    map_free(map);
     
     pq_free(pq);
     av_free(av);
 
-    return max_cost;
-}
-
-uint64_t solve_part1(char *filename) {
-    Map *map = map_parse(filename);
-    uint64_t result = navigate(map, 1, 3);
-    map_free(map);
     return result;
 }
 
 uint64_t solve_part2(char *filename) {
+    PriorityQueue *pq = pq_init();
     Map *map = map_parse(filename);
-    uint64_t result = navigate(map, 4, 10);
+    AlreadyVisited *av = av_init(map);
+
+    uint64_t result = navigate(pq, av, map, 4, 10);
     map_free(map);
+
+    pq_free(pq);
+    av_free(av);
+
     return result;
 }
 
