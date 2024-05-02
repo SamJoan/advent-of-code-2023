@@ -23,8 +23,8 @@ MU_TEST(test_parse_points_p2) {
     Points *points = parse_points("input_test.txt", '2');
 
     Point *first = points->data[0];
+    Point *second = points->data[1];
     Point *last = points->data[points->len - 1];
-    Point *second = points->data[0];
 
     mu_check(first->x == 0);
     mu_check(first->y == 0);
@@ -44,11 +44,17 @@ MU_TEST(test_solve_part1) {
     mu_check(result == 62);
 }
 
+MU_TEST(test_solve_part2) {
+    uint64_t result = solve_part2("input_test.txt");
+
+    mu_check(result == 952408144115);
+}
 
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_parse_points_p1);*/
     /*MU_RUN_TEST(test_solve_part1);*/
-    MU_RUN_TEST(test_parse_points_p2);
+    /*MU_RUN_TEST(test_parse_points_p2);*/
+    MU_RUN_TEST(test_solve_part2);
 }
 
 int run_tests() {

@@ -60,14 +60,13 @@ void parse_line_p2(char *line_in, char *dir, int *steps) {
                 exit(1);
             }
 
-
-            printf("%c %s\n", dir_char, hex_number);
-            exit(1);
+            sscanf(hex_number, "%x", steps);
         }
 
         i++;
     }
 
+    free(line_dup_orig);
 }
 
 void points_free(Points *points) {
@@ -125,12 +124,12 @@ Points *parse_points(const char *filename, char part) {
 }
 
 uint64_t area_get(Points *points) {
-    uint64_t area = 0;
+    int64_t area = 0;
     for(int i = 0; i < points->len - 1; i++) {
         Point *cur = points->data[i];
         Point *next = points->data[i + 1];
 
-        uint64_t shoelace = (cur->x * next->y) + (cur->y * next->x * -1);
+        int64_t shoelace = (cur->x * next->y) + (cur->y * next->x * -1);
         area += shoelace;
     }
 
@@ -138,13 +137,13 @@ uint64_t area_get(Points *points) {
 }
 
 uint64_t perimeter_get(Points *points) {
-    uint64_t perimeter = 0;
+    long perimeter = 0;
     for(int i = 0; i < points->len - 1; i++) {
         Point *cur = points->data[i];
         Point *next = points->data[i + 1];
 
-        perimeter += abs(cur->x - next->x);
-        perimeter += abs(cur->y - next->y);
+        perimeter += labs(cur->x - next->x);
+        perimeter += labs(cur->y - next->y);
     }
 
     return perimeter / 2;
@@ -152,6 +151,19 @@ uint64_t perimeter_get(Points *points) {
 
 uint64_t solve_part1(char *filename) {
     Points *points = parse_points(filename, '1');
+
+    uint64_t area = area_get(points);
+    uint64_t perimeter = perimeter_get(points);
+
+    uint64_t result = area + perimeter + 1;
+
+    points_free(points);
+
+    return result;
+}
+
+uint64_t solve_part2(char *filename) {
+    Points *points = parse_points(filename, '2');
 
     uint64_t area = area_get(points);
     uint64_t perimeter = perimeter_get(points);
@@ -173,6 +185,9 @@ int main(int argc, char *argv[]) {
 
         uint64_t result1 = solve_part1("input.txt");
         printf("Part 1: %lu\n", result1);
+
+        uint64_t result2 = solve_part2("input.txt");
+        printf("Part 2: %lu\n", result2);
 
 	exit(EXIT_SUCCESS);
     } else {
