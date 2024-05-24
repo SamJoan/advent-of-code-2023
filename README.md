@@ -1,4 +1,4 @@
-# advent-of-code-2023
+# advent-of-code-2023.
 
 I finished AoC 2023 in Python, but I'm rewriting it in C because it is the programming
 language of the future. My favourites:
