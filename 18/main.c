@@ -182,7 +182,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
-
         uint64_t result1 = solve_part1("input.txt");
         printf("Part 1: %lu\n", result1);
 
