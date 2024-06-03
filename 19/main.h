@@ -4,7 +4,7 @@
 typedef struct {
     char category;
     char sign;
-    int value;
+    uint64_t value;
 } Condition;
 
 typedef struct {
@@ -36,3 +36,5 @@ typedef struct {
 } Parts;
 
 void input_parse(const char *filename, Workflows **workflows_out, Parts **parts_out);
+void workflows_free(Workflows *workflows);
+void parts_free(Parts *parts);
