@@ -1,23 +1,38 @@
+#include "lib/util.h"
+#include "main.h"
+#include "minunit.h"
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include "minunit.h"
-#include "main.h"
 
 MU_TEST(test_input_parse) {
-    Workflows *w = NULL;
+    HashMap *w = NULL;
     Parts *p = NULL;
     input_parse("input_test.txt", &w, &p);
     
-    mu_check(w->len == 11);
+    int len = 0;
+    for(int i = 0; i < w->max_size; i++) {
+        KeyValue *kv = w->data[i];
+        if(kv != NULL) {
+            len++;
+        }
+    }
+    mu_check(len == 11);
     mu_check(p->len == 5);
 
-    workflows_free(w);
     parts_free(p);
+    workflows_free(w);
+}
+
+MU_TEST(test_solve_part1) {
+    uint64_t result = solve_part1("input_test.txt");
+
+    mu_check(result == 19114);
 }
 
 MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST(test_input_parse);
+    /*MU_RUN_TEST(test_input_parse);*/
+    MU_RUN_TEST(test_solve_part1);
 }
 
 int run_tests() {

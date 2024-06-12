@@ -35,6 +35,7 @@ typedef struct {
     size_t len;
 } Parts;
 
-void input_parse(const char *filename, Workflows **workflows_out, Parts **parts_out);
-void workflows_free(Workflows *workflows);
+uint64_t solve_part1(char *filename);
+void input_parse(const char *filename, HashMap **workflows_out, Parts **parts_out);
 void parts_free(Parts *parts);
+void workflows_free(HashMap *workflows);
