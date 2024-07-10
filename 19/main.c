@@ -106,12 +106,11 @@ void rules_parse(Workflow *workflow, char *rules_str_in) {
             sscanf(token + 2, "%" SCNu64, &cond->value);
 
             r->condition = cond;
-
+            r->dest_name = strdup(dststr+1);
         } else {
             r->condition = NULL;
+            r->dest_name = strdup(token);
         }
-
-        r->dest_name = strdup(token);
 
         workflow_add_rule(workflow, r);
     }
@@ -140,7 +139,6 @@ void workflow_parse(HashMap *workflows, char *line_in) {
 
     free(line_orig);
 
-    /*printf("Finished parsing workflow %s, len %zu\n", workflow->name, workflow->len);*/
     hashmap_put(workflows, workflow->name, workflow);
 }
 
@@ -178,8 +176,6 @@ void part_parse(Parts *parts, char *line_in) {
             exit(1);
         }
     }
-
-    /*printf("Finished parsing part: x: %lu, m: %lu, a: %lu, s: %lu\n", p->x, p->m, p->a, p->s);*/
 
     parts_add_part(parts, p);
     free(line_orig);
@@ -226,7 +222,6 @@ void input_parse(const char *filename, HashMap **workflows_out, Parts **parts_ou
 Workflow *worflow_find_initial(Workflows *w) {
     for(int i = 0; i < w->len; i++) {
         if(strcmp(w->data[i]->name, "in") == 0) {
-            printf("Found in\n");
             return w->data[i];
         }
     }
@@ -237,9 +232,11 @@ Workflow *worflow_find_initial(Workflows *w) {
 
 bool rule_evaluate(Rule *rule, Part *part) {
     Condition *cond = rule->condition;
-    if(cond != NULL) {
-        printf("%c %c %ld\n", cond->category, cond->sign, cond->value);
-        uint64_t left = 0;
+
+    if(cond == NULL) {
+        return true;
+    } else {
+        uint64_t left;
         if(cond->category == 'x') {
             left = part->x;
         } else if(cond->category == 'm') {
@@ -252,29 +249,34 @@ bool rule_evaluate(Rule *rule, Part *part) {
             printf("Unknown category %c\n", cond->category);
         }
 
+        bool result;
         if(cond->sign == '>') {
-            return left > cond->value;
+            result = left > cond->value;
         } else if(cond->sign == '<') {
-            return left < cond->value;
+            result = left < cond->value;
         } else {
             printf("Unknown sign %c\n", cond->sign);
             exit(1);
         }
-    } else {
-        return true;
+
+        /*printf("%ld %c %ld = %d\n", left, cond->sign, cond->value, result);*/
+        return result;
     }
 }
 
 bool part_process(HashMap *workflows, Part *part, Workflow *w) {
+    /*printf("Workflow %s\n", w->name);*/
+
     for(int i = 0; i < w->len; i++) {
         Rule *r = w->data[i];
         bool match = rule_evaluate(r, part);
-        if(match) {
+        if(match == true) {
             if(strcmp(r->dest_name, "A") == 0) {
                 return true;
             } else if(strcmp(r->dest_name, "R") == 0) {
                 return false;
             } else {
+                /*printf("Getting next workflow %s\n", r->dest_name);*/
                 Workflow *next = hashmap_get(workflows, r->dest_name);
                 return part_process(workflows, part, next);
             }
@@ -297,7 +299,7 @@ uint64_t solve_part1(char *filename) {
         Part *part = parts->data[i];
         bool accepted = part_process(workflows, part, in);
         if(accepted) {
-            printf("Part accepted\n");
+            result += part->x + part->m + part->a + part->s;
         }
 
     }
@@ -315,6 +317,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcmp(argv[1], "exec") == 0) {
+        char *filename = "input.txt";
+
+        printf("Part 1:\n%lu\n", solve_part1(filename));
 
 	exit(EXIT_SUCCESS);
     } else {
