@@ -264,9 +264,8 @@ bool rule_evaluate(Rule *rule, Part *part) {
     }
 }
 
-bool part_process(HashMap *workflows, Part *part, Workflow *w) {
-    /*printf("Workflow %s\n", w->name);*/
 
+bool part_process(HashMap *workflows, Part *part, Workflow *w) {
     for(int i = 0; i < w->len; i++) {
         Rule *r = w->data[i];
         bool match = rule_evaluate(r, part);
@@ -276,7 +275,6 @@ bool part_process(HashMap *workflows, Part *part, Workflow *w) {
             } else if(strcmp(r->dest_name, "R") == 0) {
                 return false;
             } else {
-                /*printf("Getting next workflow %s\n", r->dest_name);*/
                 Workflow *next = hashmap_get(workflows, r->dest_name);
                 return part_process(workflows, part, next);
             }
@@ -291,7 +289,6 @@ uint64_t solve_part1(char *filename) {
     HashMap *workflows = NULL;
     Parts *parts = NULL;
     input_parse(filename, &workflows, &parts);
-
 
     uint64_t result = 0;
     Workflow *in = hashmap_get(workflows, "in");
@@ -308,6 +305,204 @@ uint64_t solve_part1(char *filename) {
     parts_free(parts);
 
     return result;
+}
+
+Interval *interval_init(uint64_t start, uint64_t end) {
+    Interval *interval = smalloc(sizeof(Interval));
+    interval->start = start;
+    interval->end = end;
+
+    return interval;
+}
+
+Interval *interval_dup(Interval *orig) {
+    Interval *new = interval_init(orig->start, orig->end);
+    return new;
+}
+
+PartInterval *pi_init(PartInterval *orig) {
+    PartInterval *pi = smalloc(sizeof(PartInterval));
+
+    if(orig == NULL) {
+        pi->x = interval_init(1, 4000);
+        pi->m = interval_init(1, 4000);
+        pi->a = interval_init(1, 4000);
+        pi->s = interval_init(1, 4000);
+    } else {
+        pi->x = interval_dup(orig->x);
+        pi->m = interval_dup(orig->m);
+        pi->a = interval_dup(orig->a);
+        pi->s = interval_dup(orig->s);
+    }
+
+    return pi;
+}
+
+void interval_free(Interval *i) {
+    free(i);
+}
+
+void pi_free(PartInterval *pi) {
+    interval_free(pi->x);
+    interval_free(pi->m);
+    interval_free(pi->a);
+    interval_free(pi->s);
+
+    free(pi);
+}
+
+Interval *pi_get_key(PartInterval *pi, char key) {
+    Interval *value = NULL;
+    if(key == 'x') {
+        value = pi->x;
+    } else if(key == 'm') {
+        value = pi->m;
+    } else if(key == 'a') {
+        value = pi->a;
+    } else if(key == 's') {
+        value = pi->s;
+    } else {
+        printf("Unknown category %c\n", key);
+        exit(1);
+    }
+
+    return value;
+}
+
+void pi_set_key(PartInterval *pi, char key, uint64_t start, uint64_t end) {
+    Interval *i = interval_init(start, end);
+    
+    if(key == 'x') {
+        free(pi->x);
+        pi->x = i;
+    } else if(key == 'm') {
+        free(pi->m);
+        pi->m = i;
+    } else if(key == 'a') {
+        free(pi->a);
+        pi->a = i;
+    } else if(key == 's') {
+        free(pi->s);
+        pi->s = i;
+    }
+}
+
+void debug_interval(char key, Interval *interval) {
+    if(interval == NULL) {
+        printf("%c: NULL\n", key);
+    } else {
+        printf("%c: %lu %lu\n", key, interval->start, interval->end);
+    }
+}
+
+void debug_pi(PartInterval *pi) {
+    debug_interval('x', pi->x);
+    debug_interval('m', pi->m);
+    debug_interval('a', pi->a);
+    debug_interval('s', pi->s);
+}
+
+Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
+    Condition *cond = rule->condition;
+
+    PartInterval *eval_true = pi_init(pi);
+    PartInterval *eval_false = pi_init(pi);
+    
+    printf("Hmm...\n");
+    getchar();
+
+    if(cond == NULL) {
+        pi_free(eval_false);
+        eval_false = NULL;
+    } else {
+        char key = cond->category;
+        uint64_t val = cond->value;
+        Interval *interval = pi_get_key(pi, key);
+
+        /*debug_interval(key, interval);*/
+        /*printf("%c %c %lu\n", key, cond->sign, val);*/
+        
+        if(cond->sign == '>') {
+            pi_set_key(eval_true, key, val + 1, interval->end);
+            pi_set_key(eval_false, key, interval->start, val);
+        } else if(cond->sign == '<') {
+            pi_set_key(eval_true, key, interval->start, val - 1);
+            pi_set_key(eval_false, key, val, interval->end);
+        } else {
+            printf("Unknown sign %c\n", cond->sign);
+            exit(1);
+        }
+
+        /*debug_interval('t', pi_get_key(eval_true, key));*/
+        /*debug_interval('f', pi_get_key(eval_false, key));*/
+    }
+
+    Evaluation *eval = smalloc(sizeof(Evaluation));
+    eval->eval_true = eval_true;
+    eval->eval_false = eval_false;
+
+    return eval;
+}
+
+uint64_t sum_total(PartInterval *pi) {
+    uint64_t sum = 1;
+
+    Interval *x = pi->x;
+    Interval *m = pi->m;
+    Interval *a = pi->a;
+    Interval *s = pi->s;
+
+    sum *= x->end + 1 - x->start;
+    sum *= m->end + 1 - m->start;
+    sum *= a->end + 1 - a->start;
+    sum *= s->end + 1 - s->start;
+
+    return sum;
+}
+
+void evaluation_free(Evaluation *eval) {
+    pi_free(eval->eval_true);
+    if(eval->eval_false != NULL) {
+        pi_free(eval->eval_false);
+    }
+
+    free(eval);
+}
+
+uint64_t part_process_interval(HashMap *workflows, PartInterval *pi, Workflow *w) {
+    uint64_t nb_accepted = 0;
+    for(int i = 0; i < w->len; i++) {
+        Rule *r = w->data[i];
+        Evaluation *eval = rule_evaluate_interval(r, pi);
+
+        if(strcmp(r->dest_name, "A") == 0) {
+            nb_accepted += sum_total(eval->eval_true);
+        } else if(eval->eval_false != NULL && strcmp(r->dest_name, "R") != 0) {
+            Workflow *next = hashmap_get(workflows, r->dest_name);
+            nb_accepted += part_process_interval(workflows, eval->eval_false, next);
+        }
+
+        evaluation_free(eval);
+    }
+
+    return nb_accepted;
+}
+
+uint64_t solve_part2(char *filename) {
+    HashMap *workflows = NULL;
+    Parts *parts = NULL;
+    input_parse(filename, &workflows, &parts);
+
+    PartInterval *pi = pi_init(NULL);
+
+    Workflow *in = hashmap_get(workflows, "in");
+    uint64_t accepted_count = part_process_interval(workflows, pi, in);
+    
+    workflows_free(workflows);
+    parts_free(parts);
+    pi_free(pi);
+
+    return accepted_count;
 }
 
 int main(int argc, char *argv[]) {

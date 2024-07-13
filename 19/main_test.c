@@ -30,9 +30,17 @@ MU_TEST(test_solve_part1) {
     mu_check(result == 19114);
 }
 
+MU_TEST(test_solve_part2) {
+    uint64_t result = solve_part2("input_test.txt");
+
+    printf("hehe %lu\n", result);
+    mu_check(result == 167409079868000);
+}
+
 MU_TEST_SUITE(test_suite) {
     /*MU_RUN_TEST(test_input_parse);*/
-    MU_RUN_TEST(test_solve_part1);
+    /*MU_RUN_TEST(test_solve_part1);*/
+    MU_RUN_TEST(test_solve_part2);
 }
 
 int run_tests() {

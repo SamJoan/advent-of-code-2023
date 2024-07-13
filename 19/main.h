@@ -31,6 +31,23 @@ typedef struct {
 } Part;
 
 typedef struct {
+    uint64_t start;
+    uint64_t end;
+} Interval;
+
+typedef struct {
+    Interval *x;
+    Interval *m; 
+    Interval *a;
+    Interval *s;
+} PartInterval;
+
+typedef struct {
+    PartInterval *eval_true;
+    PartInterval *eval_false;
+} Evaluation;
+
+typedef struct {
     Part **data;
     size_t len;
 } Parts;
@@ -39,3 +56,4 @@ uint64_t solve_part1(char *filename);
 void input_parse(const char *filename, HashMap **workflows_out, Parts **parts_out);
 void parts_free(Parts *parts);
 void workflows_free(HashMap *workflows);
+uint64_t solve_part2(char *filename);
