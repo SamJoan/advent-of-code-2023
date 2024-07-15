@@ -116,6 +116,7 @@ def split_interval(interval, condition):
 
 def sum_possible(interval):
     values = []
+
     for key in interval:
         min, max = interval[key]
         values.append(max+1 - min)
@@ -124,12 +125,14 @@ def sum_possible(interval):
     for nb in values:
         total *= nb
 
+    print(interval, total)
+
     return total
 
 def calculate_ranges(routines, interval, routine_name):
     instructions = routines[routine_name]
     nb_accepted = 0
-    print(routine_name, instructions)
+    # print(routine_name, instructions)
     for i in instructions:
         if ':' in i:
             condition, call = i.split(':')

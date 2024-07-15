@@ -407,9 +407,6 @@ Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
 
     PartInterval *eval_true = pi_init(pi);
     PartInterval *eval_false = pi_init(pi);
-    
-    printf("Hmm...\n");
-    getchar();
 
     if(cond == NULL) {
         pi_free(eval_false);
@@ -419,8 +416,8 @@ Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
         uint64_t val = cond->value;
         Interval *interval = pi_get_key(pi, key);
 
-        /*debug_interval(key, interval);*/
-        /*printf("%c %c %lu\n", key, cond->sign, val);*/
+        debug_interval(key, interval);
+        printf("%c %c %lu\n", key, cond->sign, val);
         
         if(cond->sign == '>') {
             pi_set_key(eval_true, key, val + 1, interval->end);
@@ -433,8 +430,9 @@ Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
             exit(1);
         }
 
-        /*debug_interval('t', pi_get_key(eval_true, key));*/
-        /*debug_interval('f', pi_get_key(eval_false, key));*/
+        debug_interval('t', pi_get_key(eval_true, key));
+        debug_interval('f', pi_get_key(eval_false, key));
+        getchar();
     }
 
     Evaluation *eval = smalloc(sizeof(Evaluation));
@@ -456,6 +454,10 @@ uint64_t sum_total(PartInterval *pi) {
     sum *= m->end + 1 - m->start;
     sum *= a->end + 1 - a->start;
     sum *= s->end + 1 - s->start;
+    
+    debug_pi(pi);
+    printf("Hmm... sum %lu\n", sum);
+    getchar();
 
     return sum;
 }
@@ -469,20 +471,31 @@ void evaluation_free(Evaluation *eval) {
     free(eval);
 }
 
-uint64_t part_process_interval(HashMap *workflows, PartInterval *pi, Workflow *w) {
+uint64_t part_process_interval(HashMap *workflows, PartInterval *pi_in, Workflow *w) {
+    PartInterval *next = pi_init(pi_in);
+
     uint64_t nb_accepted = 0;
     for(int i = 0; i < w->len; i++) {
         Rule *r = w->data[i];
-        Evaluation *eval = rule_evaluate_interval(r, pi);
+        Evaluation *eval = rule_evaluate_interval(r, next);
 
         if(strcmp(r->dest_name, "A") == 0) {
             nb_accepted += sum_total(eval->eval_true);
-        } else if(eval->eval_false != NULL && strcmp(r->dest_name, "R") != 0) {
+        } else if(strcmp(r->dest_name, "R") != 0) {
             Workflow *next = hashmap_get(workflows, r->dest_name);
-            nb_accepted += part_process_interval(workflows, eval->eval_false, next);
+            nb_accepted += part_process_interval(workflows, eval->eval_true, next);
         }
 
-        evaluation_free(eval);
+        if(eval->eval_false != NULL) {
+            pi_free(next);
+            next = pi_init(eval->eval_false);
+            evaluation_free(eval);
+        } else {
+            pi_free(next);
+            evaluation_free(eval);
+            break;
+        }
+
     }
 
     return nb_accepted;
