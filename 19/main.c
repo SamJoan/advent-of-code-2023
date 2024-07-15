@@ -415,9 +415,6 @@ Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
         char key = cond->category;
         uint64_t val = cond->value;
         Interval *interval = pi_get_key(pi, key);
-
-        debug_interval(key, interval);
-        printf("%c %c %lu\n", key, cond->sign, val);
         
         if(cond->sign == '>') {
             pi_set_key(eval_true, key, val + 1, interval->end);
@@ -430,9 +427,6 @@ Evaluation *rule_evaluate_interval(Rule *rule, PartInterval *pi) {
             exit(1);
         }
 
-        debug_interval('t', pi_get_key(eval_true, key));
-        debug_interval('f', pi_get_key(eval_false, key));
-        getchar();
     }
 
     Evaluation *eval = smalloc(sizeof(Evaluation));
@@ -454,10 +448,6 @@ uint64_t sum_total(PartInterval *pi) {
     sum *= m->end + 1 - m->start;
     sum *= a->end + 1 - a->start;
     sum *= s->end + 1 - s->start;
-    
-    debug_pi(pi);
-    printf("Hmm... sum %lu\n", sum);
-    getchar();
 
     return sum;
 }
@@ -528,6 +518,7 @@ int main(int argc, char *argv[]) {
         char *filename = "input.txt";
 
         printf("Part 1:\n%lu\n", solve_part1(filename));
+        printf("Part 2:\n%lu\n", solve_part2(filename));
 
 	exit(EXIT_SUCCESS);
     } else {
